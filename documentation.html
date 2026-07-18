@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon 360 SDK Documentation</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #334155;
+            --heading-color: #0f172a;
+            --sidebar-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-text: #f8fafc;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            line-height: 1.6;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+            box-sizing: border-box;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            color: var(--heading-color);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .sidebar a {
+            display: block;
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        .sidebar a:hover {
+            background-color: #e2e8f0;
+            color: var(--heading-color);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 3rem 4rem;
+            max-width: 900px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1, h2, h3 {
+            color: var(--heading-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 3rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 2rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--sidebar-bg);
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.25rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-btn.copied {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        code {
+            background-color: var(--sidebar-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #b91c1c;
+        }
+        
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>Horizon 360 SDK</h2>
+        <a href="#overview">Overview & Setup</a>
+        <a href="#initialize">Initialization</a>
+        <a href="#track">Tracking Events</a>
+        <a href="#customer">Customer Profiles</a>
+        <a href="#schema">Schema Registry</a>
+        <a href="#example">Full Example Integration</a>
+    </nav>
+
+    <main class="main-content">
+        <h1>Horizon 360 SDK Documentation</h1>
+
+        <section id="overview">
+            <h2>Overview & Setup</h2>
+            <p>The Horizon 360 Node.js SDK provides a type-safe, Singleton-based interface to interact with the CDP backend. It manages JWT authentication automatically and exposes methods to register schemas, track events, and retrieve customer profiles.</p>
+            
+            <h3>Prerequisites</h3>
+            <p>Ensure the SDK file <code>horizon360.ts</code> is included in your project directory and install the required HTTP client:</p>
+            
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>npm install axios</code></pre>
+            </div>
+        </section>
+
+        <section id="initialize">
+            <h2>Initialization</h2>
+            <p>The SDK utilizes a Singleton pattern. You must call <code>initializeApp()</code> exactly once at the entry point of your application (e.g., <code>server.ts</code> or <code>app.ts</code>). Once initialized, the module retains the authenticated state globally.</p>
+
+            <h3>Parameters: <code>SDKConfig</code></h3>
+            <table>
+                <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>baseUrl</code></td>
+                    <td>string</td>
+                    <td>The root URL of the Horizon 360 backend (e.g., <code>http://localhost:8000</code>).</td>
+                </tr>
+                <tr>
+                    <td><code>username</code></td>
+                    <td>string</td>
+                    <td>The admin or system user account name used for JWT generation.</td>
+                </tr>
+                <tr>
+                    <td><code>password</code></td>
+                    <td>string</td>
+                    <td>The password for the designated account.</td>
+                </tr>
+            </table>
+
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>import { initializeApp } from './horizon360';
+
+async function boot() {
+  await initializeApp({
+    baseUrl: 'http://localhost:8000',
+    username: 'root',
+    password: 'root'
+  });
+  console.log('CDP SDK Initialized');
+}
+boot();</code></pre>
+            </div>
+        </section>
+
+        <section id="track">
+            <h2>Tracking Events</h2>
+            <p>Use the <code>track()</code> method to stream events into the CDP. Events are validated against the Schema Registry synchronously and processed into customer profiles asynchronously.</p>
+
+            <h3>Parameters</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>eventName</code></td>
+                    <td>string</td>
+                    <td>The normalized event name (must follow the <code>domain.action</code> format).</td>
+                </tr>
+                <tr>
+                    <td><code>payload</code></td>
+                    <td>Object</td>
+                    <td>The raw event data. Must contain an identifying key (like email) as defined in your schema.</td>
+                </tr>
+                <tr>
+                    <td><code>schemaVersion</code></td>
+                    <td>number</td>
+                    <td>Optional. Defaults to 1.</td>
+                </tr>
+            </table>
+
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>import { track } from './horizon360';
+
+async function registerUser(email, plan) {
+  const result = await track('account.created', {
+    email: email,
+    plan_tier: plan,
+    consent: { marketing: true }
+  });
+  console.log('Event queued:', result.event_id);
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="customer">
+            <h2>Customer Profiles</h2>
+            <p>Use the <code>getCustomer()</code> method to retrieve the real-time, unified identity record of a user, including their chronological timeline and dynamically merged attributes.</p>
+
+            <h3>Parameters</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>email</code></td>
+                    <td>string</td>
+                    <td>The exact primary email address of the customer to lookup.</td>
+                </tr>
+            </table>
+
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>import { getCustomer } from './horizon360';
+
+async function checkProfile(email) {
+  const profiles = await getCustomer(email);
+  if (profiles.length > 0) {
+    console.log('Merged Attributes:', profiles[0].attributes);
+    console.log('Event Timeline:', profiles[0].timeline);
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="schema">
+            <h2>Schema Registry</h2>
+            <p>Use <code>registerSchema()</code> to define new event structures. Incoming events will be validated against this structure before being accepted by the backend.</p>
+
+            <h3>Parameters</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>eventName</code></td>
+                    <td>string</td>
+                    <td>The normalized event name (e.g., <code>cart.viewed</code>).</td>
+                </tr>
+                <tr>
+                    <td><code>jsonSchema</code></td>
+                    <td>Object</td>
+                    <td>A valid JSON Schema definition object.</td>
+                </tr>
+                <tr>
+                    <td><code>version</code></td>
+                    <td>number</td>
+                    <td>Optional. Defaults to 1.</td>
+                </tr>
+            </table>
+
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>import { registerSchema } from './horizon360';
+
+async function setupSchemas() {
+  await registerSchema('cart.viewed', {
+    type: 'object',
+    properties: {
+      email: { type: 'string', format: 'email' },
+      item_count: { type: 'number' }
+    },
+    required: ['email']
+  });
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="example">
+            <h2>Full Example Integration</h2>
+            <p>Below is a complete, copy-paste ready example of how to initialize and utilize the SDK inside a typical controller or script environment.</p>
+
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>import { initializeApp, track, getCustomer } from './horizon360';
+
+async function executeIntegration() {
+  // 1. Initialize
+  await initializeApp({
+    baseUrl: 'http://localhost:8000',
+    username: 'root',
+    password: 'root'
+  });
+
+  // 2. Track an event
+  await track('system.test_fired', {
+    email: 'developer@example.com',
+    status: 'online'
+  });
+
+  // 3. Allow worker processing time (example only)
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // 4. Retrieve Profile
+  const profile = await getCustomer('developer@example.com');
+  console.log(JSON.stringify(profile, null, 2));
+}
+
+executeIntegration();</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function copyCode(button) {
+            // Find the <pre> block adjacent to the button
+            const preBlock = button.nextElementSibling;
+            const textToCopy = preBlock.innerText;
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Visual feedback
+                const originalText = button.innerText;
+                button.innerText = 'Copied!';
+                button.classList.add('copied');
+
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
