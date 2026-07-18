@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings } from 'lucide-react';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -53,11 +53,17 @@ export const Sidebar = () => {
       </nav>
 
       <div className="p-4 space-y-1">
-        <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 cursor-pointer">
-          <LogOut className="w-4 h-4 mr-3" /> Logout
-        </button>
+        <NavLink 
+          to="/settings" 
+          className={({ isActive }) => `flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-brand-50 text-brand-600 border-l-4 border-brand-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-l-4 border-transparent'}`}
+        >
+          <Settings className="w-4 h-4 mr-3" /> Settings
+        </NavLink>
         <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 cursor-pointer">
           <HelpCircle className="w-4 h-4 mr-3" /> Support
+        </button>
+        <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 cursor-pointer text-red-600 hover:text-red-700">
+          <LogOut className="w-4 h-4 mr-3" /> Logout
         </button>
       </div>
     </div>
