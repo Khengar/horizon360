@@ -54,6 +54,11 @@ export const horizonApi = {
     return res.data;
   },
 
+  getCustomer360: async (id: string) => {
+    const res = await api.get(`/customers/${id}/360/`);
+    return res.data;
+  },
+
   // Dynamic Segments
   getSegment: async (segmentName: string) => {
     const res = await api.get(`/segments/${segmentName}/`);
@@ -68,6 +73,43 @@ export const horizonApi = {
 
   getDeals: async () => {
     const res = await api.get('/crm/deals/');
+    return res.data;
+  },
+
+  createDeal: async (dealData: any) => {
+    const res = await api.post('/crm/deals/', dealData);
+    return res.data;
+  },
+
+  updateDeal: async (id: number | string, dealData: any) => {
+    const res = await api.patch(`/crm/deals/${id}/`, dealData);
+    return res.data;
+  },
+
+  getDealDetail: async (id: number | string) => {
+    const res = await api.get(`/crm/deals/${id}/`);
+    return res.data;
+  },
+
+  // Observability
+  getEvents: async () => {
+    const res = await api.get('/events-history/');
+    return res.data;
+  },
+  getWorkflows: async () => {
+    const res = await api.get('/workflows/');
+    return res.data;
+  },
+  getWorkflowExecutions: async () => {
+    const res = await api.get('/workflow-executions/');
+    return res.data;
+  },
+  getInsights: async () => {
+    const res = await api.get('/intelligence/insights/');
+    return res.data;
+  },
+  askCopilot: async (query: string) => {
+    const res = await api.post('/copilot/chat/', { query });
     return res.data;
   }
 };

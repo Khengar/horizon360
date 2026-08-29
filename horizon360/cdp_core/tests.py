@@ -157,3 +157,57 @@ class CeleryNormalizationTaskTest(TestCase):
     def test_process_event_task_nonexistent_id(self):
         result = process_event_task(999999)
         self.assertFalse(result)
+
+class Customer360ViewTest(APITestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from cdp_core.models import UserProfile, Customer, Company
+        from crm.models import Contact, Deal
+        
+        self.company_a = Company.objects.create(name="Company A")
+        self.company_b = Company.objects.create(name="Company B")
+        
+        self.user_a = User.objects.create_user(username='usera', password='password')
+        UserProfile.objects.create(user=self.user_a, company=self.company_a)
+        
+        self.user_b = User.objects.create_user(username='userb', password='password')
+        UserProfile.objects.create(user=self.user_b, company=self.company_b)
+        
+        self.customer_a = Customer.objects.create(company=self.company_a, primary_email="a@test.com")
+        self.contact_a = Contact.objects.get(customer=self.customer_a)
+        Deal.objects.create(company=self.company_a, customer=self.customer_a, contact=self.contact_a, value=100, stage='won')
+        Deal.objects.create(company=self.company_a, customer=self.customer_a, contact=self.contact_a, value=50, stage='new')
+        RawEvent.objects.create(company=self.company_a, customer=self.customer_a, event_name='test.event', raw_payload={'k':'v'})
+        
+        self.customer_b = Customer.objects.create(company=self.company_b, primary_email="b@test.com")
+        
+    def test_unauthenticated_request_rejected(self):
+        res = self.client.get(f'/api/customers/{self.customer_a.id}/360/')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        
+    def test_authenticated_can_retrieve_own(self):
+        self.client.force_authenticate(user=self.user_a)
+        res = self.client.get(f'/api/customers/{self.customer_a.id}/360/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(str(res.data['identity']['id']), str(self.customer_a.id))
+        self.assertEqual(res.data['contact']['id'], self.contact_a.id)
+        self.assertEqual(len(res.data['deals']), 2)
+        self.assertEqual(res.data['aggregates']['total_deal_value'], 150)
+        self.assertEqual(res.data['aggregates']['won_revenue'], 100)
+        self.assertEqual(res.data['aggregates']['open_pipeline_value'], 50)
+        self.assertEqual(len(res.data['timeline']), 3)
+        event_names = [e['event_name'] for e in res.data['timeline']]
+        self.assertIn('test.event', event_names)
+        
+    def test_cannot_retrieve_other_company(self):
+        self.client.force_authenticate(user=self.user_a)
+        res = self.client.get(f'/api/customers/{self.customer_b.id}/360/')
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        
+    def test_customer_with_no_events_or_deals(self):
+        self.client.force_authenticate(user=self.user_b)
+        res = self.client.get(f'/api/customers/{self.customer_b.id}/360/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data['deals']), 0)
+        self.assertEqual(len(res.data['timeline']), 0)
+        self.assertEqual(res.data['aggregates']['total_deal_value'], 0)

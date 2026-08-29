@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'cdp_core',
     'crm',
+    'intelligence',
+    'copilot',
     'corsheaders',
 ]
 

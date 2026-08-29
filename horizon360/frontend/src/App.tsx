@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
+import { Customer360 } from './pages/Customer360';
+import { Pipeline } from './pages/Pipeline';
 import { SettingsPage } from './pages/Settings';
 import "./App.css";
 
@@ -59,6 +61,8 @@ function App() {
                   <Route path="/sources" element={<Placeholder title="Connect Sources" />} />
                   <Route path="/identity" element={<Placeholder title="Identity Resolution Engine" />} />
                   <Route path="/profiles" element={<Dashboard />} />
+                  <Route path="/pipeline" element={<Pipeline />} />
+                  <Route path="/customers/:id/360" element={<Customer360 />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="*" element={<Placeholder title="Not Found" />} />
                 </Routes>

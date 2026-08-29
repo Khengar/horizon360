@@ -19,3 +19,16 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = ['id', 'primary_email', 'primary_phone', 'attributes', 'timeline', 'created_at', 'updated_at']
 
+from .models import Workflow, WorkflowExecution
+
+class WorkflowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Workflow
+        fields = ['id', 'name', 'trigger_event', 'is_active', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_event_name', 'created_at']
+
+class WorkflowExecutionSerializer(serializers.ModelSerializer):
+    workflow_name = serializers.CharField(source='workflow.name', read_only=True)
+    class Meta:
+        model = WorkflowExecution
+        fields = ['id', 'workflow', 'workflow_name', 'raw_event', 'status', 'error_message', 'created_at']
+

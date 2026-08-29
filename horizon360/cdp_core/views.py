@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 import jsonschema
 from jsonschema.exceptions import ValidationError
 from .models import EventSchema, RawEvent, Customer, Company
@@ -94,6 +95,75 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(primary_email=email)
         return queryset
 
+    @action(detail=True, methods=['get'], url_path='360')
+    def customer_360(self, request, pk=None):
+        customer = self.get_queryset().prefetch_related('deals').select_related('contact', 'company').filter(pk=pk).first()
+        if not customer:
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        deals = list(customer.deals.all())
+        total_deal_value = sum((d.value for d in deals), 0)
+        open_deals = [d for d in deals if d.stage not in ['won', 'lost']]
+        won_deals = [d for d in deals if d.stage == 'won']
+        lost_deals = [d for d in deals if d.stage == 'lost']
+        open_pipeline_value = sum((d.value for d in open_deals), 0)
+        won_revenue = sum((d.value for d in won_deals), 0)
+
+        contact_data = None
+        if hasattr(customer, 'contact') and customer.contact:
+            contact_data = {
+                "id": customer.contact.id,
+                "notes": customer.contact.notes,
+                "created_at": customer.contact.created_at,
+            }
+
+        deals_data = [
+            {
+                "id": d.id,
+                "stage": d.stage,
+                "value": d.value,
+                "created_at": d.created_at,
+                "status": d.get_stage_display()
+            } for d in deals
+        ]
+        
+        events = customer.raw_events.all().order_by('-created_at')
+        events_data = [
+            {
+                "id": e.id,
+                "event_name": e.event_name,
+                "created_at": e.created_at,
+                "payload": e.raw_payload
+            } for e in events
+        ]
+
+        data = {
+            "identity": {
+                "id": customer.id,
+                "primary_email": customer.primary_email,
+                "primary_phone": customer.primary_phone,
+                "attributes": customer.attributes,
+                "created_at": customer.created_at,
+                "updated_at": customer.updated_at
+            },
+            "company": {
+                "id": customer.company.id,
+                "name": customer.company.name
+            },
+            "contact": contact_data,
+            "deals": deals_data,
+            "aggregates": {
+                "total_deal_value": total_deal_value,
+                "open_pipeline_value": open_pipeline_value,
+                "won_revenue": won_revenue,
+                "open_deals_count": len(open_deals),
+                "won_deals_count": len(won_deals),
+                "lost_deals_count": len(lost_deals)
+            },
+            "timeline": events_data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
 class SegmentView(APIView):
     """
     API endpoint that returns hardcoded dynamic segments.
@@ -116,3 +186,37 @@ class SegmentView(APIView):
 
         serializer = CustomerSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+from .models import Workflow, WorkflowExecution
+from .serializers import WorkflowSerializer, WorkflowExecutionSerializer
+
+class WorkflowViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = WorkflowSerializer
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'profile'):
+            return Workflow.objects.none()
+        return Workflow.objects.filter(company=self.request.user.profile.company)
+
+class WorkflowExecutionViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = WorkflowExecutionSerializer
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'profile'):
+            return WorkflowExecution.objects.none()
+        return WorkflowExecution.objects.filter(workflow__company=self.request.user.profile.company).order_by('-created_at')
+
+from .serializers import serializers
+
+class RawEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RawEvent
+        fields = ['id', 'event_name', 'raw_payload', 'processed', 'created_at']
+
+class RawEventViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = RawEventSerializer
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'profile'):
+            return RawEvent.objects.none()
+        return RawEvent.objects.filter(company=self.request.user.profile.company).order_by('-created_at')

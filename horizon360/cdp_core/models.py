@@ -77,5 +77,50 @@ class RawEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.company and self.customer and self.customer.company != self.company:
+            raise ValidationError("RawEvent company must match Customer company.")
+
+    def save(self, *args, **kwargs):
+        if not self.company and self.customer:
+            self.company = self.customer.company
+        self.clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.event_name} (ID: {self.id}, processed={self.processed})"
+
+class Workflow(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='workflows')
+    name = models.CharField(max_length=255)
+    trigger_event = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    condition_field = models.CharField(max_length=255, blank=True)
+    condition_operator = models.CharField(max_length=50, blank=True)
+    condition_value = models.CharField(max_length=255, blank=True)
+    action_type = models.CharField(max_length=255)
+    action_event_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class WorkflowExecution(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('skipped', 'Skipped'),
+        ('failed', 'Failed'),
+    ]
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='executions')
+    raw_event = models.ForeignKey(RawEvent, on_delete=models.CASCADE, related_name='workflow_executions')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('workflow', 'raw_event')
+
+    def __str__(self):
+        return f"{self.workflow.name} on {self.raw_event.id} - {self.status}"

@@ -1,11 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .auth_views import RegisterView, LoginView, LogoutView
-from .views import EventIngestionView, EventSchemaViewSet, CustomerViewSet, SegmentView
+from .views import EventIngestionView, EventSchemaViewSet, CustomerViewSet, SegmentView, WorkflowViewSet, WorkflowExecutionViewSet, RawEventViewSet
 
 router = DefaultRouter()
 router.register(r'schemas', EventSchemaViewSet, basename='schema')
 router.register(r'customers', CustomerViewSet, basename='customer')
+router.register(r'workflows', WorkflowViewSet, basename='workflow')
+router.register(r'workflow-executions', WorkflowExecutionViewSet, basename='workflowexecution')
+router.register(r'events-history', RawEventViewSet, basename='rawevent')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),

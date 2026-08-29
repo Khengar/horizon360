@@ -21,4 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('cdp_core.urls')),
     path('api/crm/', include('crm.urls')),
+    path('api/intelligence/', include('intelligence.urls')),
+    path('api/copilot/', include('copilot.urls')),
 ]

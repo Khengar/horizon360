@@ -17,6 +17,7 @@ export const Sidebar = () => {
     { name: 'Sources', path: '/sources', icon: Link },
     { name: 'Identity Resolution', path: '/identity', icon: UserCheck },
     { name: 'Unified Profiles', path: '/profiles', icon: Users },
+    { name: 'CRM Pipeline', path: '/pipeline', icon: LayoutDashboard },
   ];
 
   return (

@@ -17,6 +17,10 @@ def process_event_task(raw_event_id):
         logger.error(f"RawEvent with id {raw_event_id} does not exist.")
         return False
 
+    if raw_event.processed:
+        logger.info(f"RawEvent {raw_event_id} is already processed. Skipping.")
+        return True
+
     # Normalization step on the event_name
     normalized_name = raw_event.event_name.strip().lower()
     raw_event.event_name = normalized_name
@@ -44,8 +48,8 @@ def process_event_task(raw_event_id):
         if key not in ['email', 'phone']:
             properties_to_merge[key] = value
 
-    customer = None
-    if email or phone:
+    customer = raw_event.customer
+    if not customer and (email or phone):
         # 2. Query for exact match scoped to company
         query = Q(company=raw_event.company)
         identity_q = Q()
@@ -111,6 +115,10 @@ def process_event_task(raw_event_id):
     # Mark as processed and save
     raw_event.processed = True
     raw_event.save()
+    
+    # 5. Execute Workflows
+    from .workflow_service import execute_workflows
+    execute_workflows(raw_event)
     
     logger.info(f"Successfully processed RawEvent {raw_event_id} (normalized to: {normalized_name})")
     return True
