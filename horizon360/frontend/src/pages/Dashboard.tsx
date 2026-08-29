@@ -5,13 +5,16 @@ import { horizonApi } from '../api';
 
 export const Dashboard = () => {
   const [customers, setCustomers] = useState([]);
+  const [deals, setDeals] = useState([]);
   
   useEffect(() => {
     horizonApi.getCustomers().then(data => setCustomers(data)).catch(console.error);
+    horizonApi.getDeals().then(data => setDeals(data)).catch(console.error);
   }, []);
 
   const unifiedProfilesCount = customers.length;
   const totalEvents = customers.reduce((sum, c: any) => sum + (c.timeline?.length || 0), 0);
+  const totalDealValue = deals.reduce((sum, d: any) => sum + parseFloat(d.value || 0), 0);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white">
@@ -28,7 +31,7 @@ export const Dashboard = () => {
       {/* Main Content Area */}
       <div className="p-8 max-w-6xl w-full">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Unified Profiles</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Unified Profiles & CRM</h2>
           <p className="text-gray-500 mt-1">Explore and manage unified customer identities across all integrated sources.</p>
         </div>
 
@@ -38,7 +41,7 @@ export const Dashboard = () => {
             <StatCard title="Unified Profiles" value={unifiedProfilesCount.toString()} subtext="Total customers" />
           </div>
           <div className="flex-1">
-            <StatCard title="Total Tracked Events" value={totalEvents.toString()} subtext="Across all profiles" />
+            <StatCard title="Pipeline Value" value={`$${totalDealValue.toFixed(2)}`} subtext={`${deals.length} active deals`} isPositive={true} />
           </div>
           <div className="flex-1">
             <StatCard title="Data Sources" value="1 Active" subtext="Webhook Ingestion" isPositive={true} />

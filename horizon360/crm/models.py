@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from cdp_core.models import Customer, Company
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Contact(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
@@ -43,3 +45,9 @@ class Deal(models.Model):
 
     def __str__(self):
         return f"Deal for {self.contact} - {self.get_stage_display()} - ${self.value}"
+
+@receiver(post_save, sender=Customer)
+def create_contact_for_customer(sender, instance, created, **kwargs):
+    if created:
+        Contact.objects.get_or_create(customer=instance, company=instance.company)
+

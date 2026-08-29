@@ -18,6 +18,12 @@ class EventSchemaViewSet(viewsets.ModelViewSet):
             return EventSchema.objects.none()
         return EventSchema.objects.filter(company=self.request.user.profile.company)
 
+    def perform_create(self, serializer):
+        if hasattr(self.request.user, 'profile'):
+            serializer.save(company=self.request.user.profile.company)
+        else:
+            serializer.save()
+
 
 class EventIngestionView(APIView):
     """

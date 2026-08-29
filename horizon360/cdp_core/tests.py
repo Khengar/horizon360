@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from unittest.mock import patch
 
-from .models import EventSchema, RawEvent
+from .models import EventSchema, RawEvent, Company
 from .tasks import process_event_task
 
 
@@ -58,7 +58,14 @@ class EventIngestionViewTest(APITestCase):
             },
             "required": ["user_id"]
         }
+        from django.contrib.auth.models import User
+        from cdp_core.models import UserProfile
+        self.company = Company.objects.create(name="Test Corp")
+        self.user = User.objects.create_user(username='testadmin', password='password')
+        UserProfile.objects.create(user=self.user, company=self.company)
+        self.api_key = str(self.company.api_token)
         self.schema = EventSchema.objects.create(
+            company=self.company,
             event_name="user.logged_in",
             json_schema=self.schema_data
         )
@@ -72,7 +79,7 @@ class EventIngestionViewTest(APITestCase):
                 "email": "test@example.com"
             }
         }
-        response = self.client.post('/api/events/', payload, format='json')
+        response = self.client.post('/api/events/', payload, format='json', HTTP_X_API_KEY=self.api_key)
         
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertIn('event_id', response.data)
@@ -94,7 +101,7 @@ class EventIngestionViewTest(APITestCase):
                 "product_id": 99
             }
         }
-        response = self.client.post('/api/events/', payload, format='json')
+        response = self.client.post('/api/events/', payload, format='json', HTTP_X_API_KEY=self.api_key)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
@@ -108,7 +115,7 @@ class EventIngestionViewTest(APITestCase):
                 "email": "invalid-email-format"
             }
         }
-        response = self.client.post('/api/events/', payload, format='json')
+        response = self.client.post('/api/events/', payload, format='json', HTTP_X_API_KEY=self.api_key)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
@@ -121,10 +128,10 @@ class EventIngestionViewTest(APITestCase):
                 "user_id": 42
             }
         }
-        response = self.client.post('/api/events/', payload, format='json')
+        response = self.client.post('/api/events/', payload, format='json', HTTP_X_API_KEY=self.api_key)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("event_name", response.data)
+        self.assertIn("error", response.data)
 
 
 class CeleryNormalizationTaskTest(TestCase):

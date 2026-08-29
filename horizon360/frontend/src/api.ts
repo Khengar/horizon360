@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = `http://${window.location.hostname}:8000/api`;
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -57,6 +57,17 @@ export const horizonApi = {
   // Dynamic Segments
   getSegment: async (segmentName: string) => {
     const res = await api.get(`/segments/${segmentName}/`);
+    return res.data;
+  },
+
+  // CRM
+  getContacts: async () => {
+    const res = await api.get('/crm/contacts/');
+    return res.data;
+  },
+
+  getDeals: async () => {
+    const res = await api.get('/crm/deals/');
     return res.data;
   }
 };

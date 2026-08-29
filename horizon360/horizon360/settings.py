@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-ypen_ekwx+0)r@^1e)4yhq@rsbc%p*+wjpf2u2gk87hfj%hh2t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -152,6 +152,7 @@ CELERY_TIMEZONE = 'UTC'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'cdp_core.authentication.APITokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),

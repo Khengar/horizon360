@@ -46,19 +46,21 @@ def process_event_task(raw_event_id):
 
     customer = None
     if email or phone:
-        # 2. Query for exact match
-        query = Q()
+        # 2. Query for exact match scoped to company
+        query = Q(company=raw_event.company)
+        identity_q = Q()
         if email:
-            query |= Q(primary_email=email)
+            identity_q |= Q(primary_email=email)
         if phone:
-            query |= Q(primary_phone=phone)
+            identity_q |= Q(primary_phone=phone)
             
-        # For simplicity, we just pick the first match (if duplicates existed somehow)
-        customer = Customer.objects.filter(query).first()
+        # For simplicity, we just pick the first match
+        customer = Customer.objects.filter(query & identity_q).first()
         
         # 3. Create if no match exists
         if not customer:
             customer = Customer.objects.create(
+                company=raw_event.company,
                 primary_email=email,
                 primary_phone=phone
             )
@@ -92,6 +94,19 @@ def process_event_task(raw_event_id):
         
         # Save updated Customer
         customer.save()
+        
+        # Minimal Workflow Execution
+        if normalized_name == 'order.completed':
+            from crm.models import Contact, Deal
+            contact = Contact.objects.filter(customer=customer).first()
+            if contact:
+                amount = payload.get('amount', 0.0)
+                Deal.objects.create(
+                    company=raw_event.company,
+                    contact=contact,
+                    stage='won',
+                    value=amount
+                )
     
     # Mark as processed and save
     raw_event.processed = True

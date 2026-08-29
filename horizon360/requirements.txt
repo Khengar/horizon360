@@ -3,5 +3,6 @@ djangorestframework>=3.14,<4.0
 celery>=5.3,<6.0
 redis>=5.0,<6.0
 psycopg[binary]>=3.1,<4.0
-jsonschema>=4.21,<5.0djangorestframework-simplejwt>=5.3,<6.0
+jsonschema>=4.21,<5.0
+djangorestframework-simplejwt>=5.3,<6.0
 django-cors-headers
