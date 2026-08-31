@@ -9,13 +9,11 @@ services:
       POSTGRES_PASSWORD: horizon_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # Note: Internal network connects web/worker via db:5432; host port binding omitted to avoid conflicts.
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # Note: Internal network connects web/worker via redis:6379; host port binding omitted to avoid conflicts.
 
   web:
     build: .
@@ -27,6 +25,8 @@ services:
       - .:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - DB_NAME=horizon_db
       - DB_USER=horizon_user
@@ -43,6 +43,8 @@ services:
     command: celery -A horizon360 worker -l info
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
       - DB_NAME=horizon_db
       - DB_USER=horizon_user

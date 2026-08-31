@@ -4,9 +4,22 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 import jsonschema
 from jsonschema.exceptions import ValidationError
-from .models import EventSchema, RawEvent, Customer, Company
+from .models import EventSchema, RawEvent, Customer, Company, UserProfile
 from .serializers import EventSchemaSerializer, CustomerSerializer
 from .tasks import process_event_task
+
+def get_or_create_user_company(user):
+    if hasattr(user, 'profile') and user.profile and user.profile.company:
+        return user.profile.company
+    company = Company.objects.first()
+    if not company:
+        company = Company.objects.create(name='Default Corp')
+    if user and user.is_authenticated:
+        profile, _ = UserProfile.objects.get_or_create(user=user, defaults={'company': company})
+        if not profile.company:
+            profile.company = company
+            profile.save()
+    return company
 
 class EventSchemaViewSet(viewsets.ModelViewSet):
     """
@@ -15,15 +28,14 @@ class EventSchemaViewSet(viewsets.ModelViewSet):
     serializer_class = EventSchemaSerializer
 
     def get_queryset(self):
-        if not hasattr(self.request.user, 'profile'):
+        if not self.request.user.is_authenticated:
             return EventSchema.objects.none()
-        return EventSchema.objects.filter(company=self.request.user.profile.company)
+        company = get_or_create_user_company(self.request.user)
+        return EventSchema.objects.filter(company=company)
 
     def perform_create(self, serializer):
-        if hasattr(self.request.user, 'profile'):
-            serializer.save(company=self.request.user.profile.company)
-        else:
-            serializer.save()
+        company = get_or_create_user_company(self.request.user)
+        serializer.save(company=company)
 
 
 class EventIngestionView(APIView):
@@ -86,10 +98,11 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CustomerSerializer
 
     def get_queryset(self):
-        if not hasattr(self.request.user, 'profile'):
+        if not self.request.user.is_authenticated:
             return Customer.objects.none()
             
-        queryset = Customer.objects.filter(company=self.request.user.profile.company)
+        company = get_or_create_user_company(self.request.user)
+        queryset = Customer.objects.filter(company=company)
         email = self.request.query_params.get('email', None)
         if email is not None:
             queryset = queryset.filter(primary_email=email)
@@ -147,8 +160,8 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
                 "updated_at": customer.updated_at
             },
             "company": {
-                "id": customer.company.id,
-                "name": customer.company.name
+                "id": customer.company.id if customer.company else 1,
+                "name": customer.company.name if customer.company else "Default Corp"
             },
             "contact": contact_data,
             "deals": deals_data,
@@ -169,10 +182,7 @@ class SegmentView(APIView):
     API endpoint that returns hardcoded dynamic segments.
     """
     def get(self, request, segment_name, *args, **kwargs):
-        if not hasattr(request.user, 'profile'):
-            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        company = request.user.profile.company
+        company = get_or_create_user_company(request.user)
         base_qs = Customer.objects.filter(company=company)
 
         if segment_name == 'free-tier':
@@ -194,17 +204,19 @@ class WorkflowViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = WorkflowSerializer
 
     def get_queryset(self):
-        if not hasattr(self.request.user, 'profile'):
+        if not self.request.user.is_authenticated:
             return Workflow.objects.none()
-        return Workflow.objects.filter(company=self.request.user.profile.company)
+        company = get_or_create_user_company(self.request.user)
+        return Workflow.objects.filter(company=company)
 
 class WorkflowExecutionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = WorkflowExecutionSerializer
 
     def get_queryset(self):
-        if not hasattr(self.request.user, 'profile'):
+        if not self.request.user.is_authenticated:
             return WorkflowExecution.objects.none()
-        return WorkflowExecution.objects.filter(workflow__company=self.request.user.profile.company).order_by('-created_at')
+        company = get_or_create_user_company(self.request.user)
+        return WorkflowExecution.objects.filter(workflow__company=company).order_by('-created_at')
 
 from .serializers import serializers
 
@@ -217,6 +229,7 @@ class RawEventViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RawEventSerializer
 
     def get_queryset(self):
-        if not hasattr(self.request.user, 'profile'):
+        if not self.request.user.is_authenticated:
             return RawEvent.objects.none()
-        return RawEvent.objects.filter(company=self.request.user.profile.company).order_by('-created_at')
+        company = get_or_create_user_company(self.request.user)
+        return RawEvent.objects.filter(company=company).order_by('-created_at')

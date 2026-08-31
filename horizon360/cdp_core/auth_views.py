@@ -7,6 +7,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Company, UserProfile
 from rest_framework.permissions import AllowAny
 
+def get_or_create_user_company(user):
+    if hasattr(user, 'profile') and user.profile and user.profile.company:
+        return user.profile.company
+    company = Company.objects.first()
+    if not company:
+        company = Company.objects.create(name='Default Corp')
+    if user and user.is_authenticated:
+        profile, _ = UserProfile.objects.get_or_create(user=user, defaults={'company': company})
+        if not profile.company:
+            profile.company = company
+            profile.save()
+    return company
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -45,10 +58,9 @@ class LoginView(APIView):
 
         user = authenticate(username=username, password=password)
         if user:
+            company = get_or_create_user_company(user)
             refresh = RefreshToken.for_user(user)
-            company_api_token = None
-            if hasattr(user, 'profile'):
-                company_api_token = str(user.profile.company.api_token)
+            company_api_token = str(company.api_token) if company else None
 
             return Response({
                 "access": str(refresh.access_token),
@@ -62,6 +74,4 @@ class LogoutView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        # Client handles discarding the access token. 
-        # We can accept the refresh token here to blacklist it if configured.
         return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)

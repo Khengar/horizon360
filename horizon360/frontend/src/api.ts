@@ -91,7 +91,7 @@ export const horizonApi = {
     return res.data;
   },
 
-  // Observability
+  // Observability & Multi-Agent Intelligence
   getEvents: async () => {
     const res = await api.get('/events-history/');
     return res.data;
@@ -104,8 +104,22 @@ export const horizonApi = {
     const res = await api.get('/workflow-executions/');
     return res.data;
   },
-  getInsights: async () => {
-    const res = await api.get('/intelligence/insights/');
+  getInsights: async (filters?: { agent_type?: string; severity?: string }) => {
+    const res = await api.get('/intelligence/insights/', { params: filters });
+    return res.data;
+  },
+  runIntelligenceMesh: async () => {
+    const res = await api.post('/intelligence/run/', {});
+    return res.data;
+  },
+  executeAction: async (actionData: {
+    action_type: string;
+    entity_type?: string;
+    entity_id?: string;
+    insight_id?: number | string;
+    payload?: Record<string, any>;
+  }) => {
+    const res = await api.post('/intelligence/action/', actionData);
     return res.data;
   },
   askCopilot: async (query: string) => {
