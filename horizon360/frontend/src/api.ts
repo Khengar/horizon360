@@ -100,6 +100,10 @@ export const horizonApi = {
     const res = await api.get('/workflows/');
     return res.data;
   },
+  getWorkflowTemplates: async () => {
+    const res = await api.get('/workflows/templates/');
+    return res.data;
+  },
   getWorkflowExecutions: async () => {
     const res = await api.get('/workflow-executions/');
     return res.data;
@@ -124,6 +128,79 @@ export const horizonApi = {
   },
   askCopilot: async (query: string) => {
     const res = await api.post('/copilot/chat/', { query });
+    return res.data;
+  },
+  getInvoices: async () => {
+    const res = await api.get('/finance/invoices/');
+    return res.data;
+  },
+  getServiceTickets: async () => {
+    const res = await api.get('/service/tickets/');
+    return res.data;
+  },
+  getCampaigns: async () => {
+    const res = await api.get('/marketing/campaigns/');
+    return res.data;
+  },
+  getLeads: async () => {
+    const res = await api.get('/marketing/leads/');
+    return res.data;
+  },
+  getProjects: async () => {
+    const res = await api.get('/projects/projects/');
+    return res.data;
+  },
+  getEmployees: async () => {
+    const res = await api.get('/hrms/employees/');
+    return res.data;
+  },
+  getLeaveRequests: async () => {
+    const res = await api.get('/hrms/leave-requests/');
+    return res.data;
+  },
+  getDepartments: async () => {
+    const res = await api.get('/hrms/departments/');
+    return res.data;
+  },
+  getProducts: async () => {
+    const res = await api.get('/commerce/products/');
+    return res.data;
+  },
+  getOrders: async () => {
+    const res = await api.get('/commerce/orders/');
+    return res.data;
+  },
+  getPartners: async () => {
+    const res = await api.get('/partner/partners/');
+    return res.data;
+  },
+  getPartnerOpportunities: async () => {
+    const res = await api.get('/partner/opportunities/');
+    return res.data;
+  },
+  getVendors: async () => {
+    const res = await api.get('/vendor/vendors/');
+    return res.data;
+  },
+  getPurchaseOrders: async () => {
+    const res = await api.get('/vendor/purchase-orders/');
+    return res.data;
+  },
+
+  getIntegrations: async () => {
+    const res = await api.get('/nexus/integrations/');
+    return res.data;
+  },
+  getIntegrationLogs: async () => {
+    const res = await api.get('/nexus/integration-logs/');
+    return res.data;
+  },
+  updateWorkflow: async (id: number, data: any) => {
+    const res = await api.patch(`/workflows/${id}/`, data);
+    return res.data;
+  },
+  createWorkflow: async (data: any) => {
+    const res = await api.post('/workflows/', data);
     return res.data;
   }
 };

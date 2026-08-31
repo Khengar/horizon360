@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard';
+import { Finance } from './pages/Finance';
+import { Service } from './pages/Service';
+import { Marketing } from './pages/Marketing';
+import { Projects } from './pages/Projects';
+import { HRMS } from './pages/HRMS';
+import { Commerce } from './pages/Commerce';
+import { Partner } from './pages/Partner';
+import { Vendor } from './pages/Vendor';
+import { Workflows } from './pages/Workflows';
+import { OperationsMap } from './pages/OperationsMap';
+import { Integrations } from './pages/Integrations';
 import { Login } from './pages/Login';
 import { Customer360 } from './pages/Customer360';
 import { Pipeline } from './pages/Pipeline';
@@ -9,7 +20,7 @@ import { SettingsPage } from './pages/Settings';
 import "./App.css";
 
 // Protected Route Wrapper
-const ProtectedRoute = ({ isAuthenticated, children }: { isAuthenticated: boolean, children: JSX.Element }) => {
+const ProtectedRoute = ({ isAuthenticated, children }: { isAuthenticated: boolean, children: any }) => {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -63,6 +74,17 @@ function App() {
                   <Route path="/profiles" element={<Dashboard />} />
                   <Route path="/pipeline" element={<Pipeline />} />
                   <Route path="/customers/:id/360" element={<Customer360 />} />
+                  <Route path="/finance" element={<Finance />} />
+                  <Route path="/service" element={<Service />} />
+                  <Route path="/marketing" element={<Marketing />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/hrms" element={<HRMS />} />
+                  <Route path="/commerce" element={<Commerce />} />
+                  <Route path="/partner" element={<Partner />} />
+                  <Route path="/vendor" element={<Vendor />} />
+                  <Route path="/workflows" element={<Workflows />} />
+                  <Route path="/map" element={<OperationsMap />} />
+                  <Route path="/integrations" element={<Integrations />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="*" element={<Placeholder title="Not Found" />} />
                 </Routes>

@@ -44,6 +44,15 @@ INSTALLED_APPS = [
     'crm',
     'intelligence',
     'copilot',
+    'finance',
+    'service',
+    'marketing',
+    'projects',
+    'hrms',
+    'commerce',
+    'partner',
+    'vendor',
+    'integrations',
     'corsheaders',
 ]
 

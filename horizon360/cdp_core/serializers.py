@@ -24,7 +24,7 @@ from .models import Workflow, WorkflowExecution
 class WorkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workflow
-        fields = ['id', 'name', 'trigger_event', 'is_active', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_event_name', 'created_at']
+        fields = ['id', 'name', 'trigger_event', 'is_active', 'condition_field', 'condition_operator', 'condition_value', 'action_type', 'action_event_name', 'source_biom', 'destination_biom', 'created_at']
 
 class WorkflowExecutionSerializer(serializers.ModelSerializer):
     workflow_name = serializers.CharField(source='workflow.name', read_only=True)

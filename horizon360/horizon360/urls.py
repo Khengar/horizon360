@@ -23,4 +23,13 @@ urlpatterns = [
     path('api/crm/', include('crm.urls')),
     path('api/intelligence/', include('intelligence.urls')),
     path('api/copilot/', include('copilot.urls')),
+    path('api/finance/', include('finance.urls')),
+    path('api/service/', include('service.urls')),
+    path('api/marketing/', include('marketing.urls')),
+    path('api/projects/', include('projects.urls')),
+    path('api/hrms/', include('hrms.urls')),
+    path('api/commerce/', include('commerce.urls')),
+    path('api/partner/', include('partner.urls')),
+    path('api/vendor/', include('vendor.urls')),
+    path('api/nexus/', include('integrations.urls')),
 ]

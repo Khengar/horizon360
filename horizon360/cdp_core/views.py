@@ -200,7 +200,10 @@ class SegmentView(APIView):
 from .models import Workflow, WorkflowExecution
 from .serializers import WorkflowSerializer, WorkflowExecutionSerializer
 
-class WorkflowViewSet(viewsets.ReadOnlyModelViewSet):
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+class WorkflowViewSet(viewsets.ModelViewSet):
     serializer_class = WorkflowSerializer
 
     def get_queryset(self):
@@ -208,6 +211,29 @@ class WorkflowViewSet(viewsets.ReadOnlyModelViewSet):
             return Workflow.objects.none()
         company = get_or_create_user_company(self.request.user)
         return Workflow.objects.filter(company=company)
+        
+    def perform_create(self, serializer):
+        company = get_or_create_user_company(self.request.user)
+        serializer.save(company=company)
+
+    @action(detail=False, methods=['get'])
+    def templates(self, request):
+        templates = [
+            {"group": "Sales", "name": "Deal Won → Invoice", "trigger_event": "deal.won", "action_type": "create_invoice", "source_biom": "Sales", "destination_biom": "Finance"},
+            {"group": "Sales", "name": "Deal Won → Project", "trigger_event": "deal.won", "action_type": "create_project", "source_biom": "Sales", "destination_biom": "Projects"},
+            {"group": "Sales", "name": "Stalled Deal → Follow-up", "trigger_event": "deal.stalled", "action_type": "create_ticket", "source_biom": "Sales", "destination_biom": "Service"},
+            {"group": "Marketing", "name": "Lead Qualified → Sales Opportunity", "trigger_event": "lead.qualified", "action_type": "create_opportunity", "source_biom": "Marketing", "destination_biom": "Sales"},
+            {"group": "Marketing", "name": "Lead Converted → Customer Onboarding", "trigger_event": "lead.converted", "action_type": "create_onboarding_project", "source_biom": "Marketing", "destination_biom": "Projects"},
+            {"group": "Finance", "name": "Invoice Paid → Project", "trigger_event": "invoice.paid", "action_type": "create_project", "source_biom": "Finance", "destination_biom": "Projects"},
+            {"group": "Finance", "name": "Invoice Overdue → Service Escalation", "trigger_event": "invoice.overdue", "action_type": "create_ticket", "source_biom": "Finance", "destination_biom": "Service"},
+            {"group": "Projects", "name": "Project Created → Service Onboarding", "trigger_event": "project.created", "action_type": "create_ticket", "source_biom": "Projects", "destination_biom": "Service"},
+            {"group": "Service", "name": "Critical Ticket → Executive Escalation", "trigger_event": "ticket.critical", "action_type": "ai_generate_insight", "source_biom": "Service", "destination_biom": "Intelligence"},
+            {"group": "HRMS", "name": "Employee Created → Onboarding Project", "trigger_event": "employee.created", "action_type": "create_onboarding_project", "source_biom": "HRMS", "destination_biom": "Projects"},
+            {"group": "Commerce", "name": "Order Fulfilled → Customer Success Follow-up", "trigger_event": "order.fulfilled", "action_type": "create_ticket", "source_biom": "Commerce", "destination_biom": "Service"},
+            {"group": "Partner", "name": "Partner Opportunity Won → Sales Workflow", "trigger_event": "partner_opportunity.won", "action_type": "create_opportunity", "source_biom": "Partner", "destination_biom": "Sales"},
+            {"group": "Vendor", "name": "Purchase Order Approved → Finance Event", "trigger_event": "purchase_order.approved", "action_type": "ai_generate_insight", "source_biom": "Vendor", "destination_biom": "Finance"}
+        ]
+        return Response(templates)
 
 class WorkflowExecutionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = WorkflowExecutionSerializer

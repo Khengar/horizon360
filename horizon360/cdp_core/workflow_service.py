@@ -128,5 +128,203 @@ def execute_action(workflow, raw_event):
             )
             customer.save()
 
+    elif workflow.action_type == 'create_invoice':
+        from finance.models import Invoice
+        payload = raw_event.raw_payload or {}
+        
+        deal_id = payload.get('deal_id')
+        if not deal_id:
+            # Maybe the event is deal.won, the deal is in payload? Wait, the RawEvent payload has deal details.
+            # Let's extract from payload.
+            deal_id = payload.get('id')
+        
+        amount = payload.get('value', 0)
+        
+        from crm.models import Deal
+        deal = None
+        if deal_id:
+            try:
+                deal = Deal.objects.get(id=deal_id, company=raw_event.company)
+            except Deal.DoesNotExist:
+                pass
+                
+        # Idempotency check: Don't create if invoice for this deal exists. 
+        # But maybe the workflow execution table handles idempotency? Yes it does.
+        
+        invoice = Invoice.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            deal=deal,
+            invoice_number=f"INV-{raw_event.id}",
+            amount=amount,
+            status='requested'
+        )
+        
+        # Emit invoice.requested event
+        new_payload = dict(raw_event.raw_payload)
+        new_payload['invoice_id'] = invoice.id
+        new_payload['amount'] = float(amount)
+        new_payload['source_workflow'] = workflow.name
+        
+        new_event = RawEvent.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            event_name='invoice.requested',
+            raw_payload=new_payload,
+            processed=False
+        )
+        
+        from .tasks import process_event_task
+        process_event_task.delay(new_event.id)
+
+    elif workflow.action_type == 'create_project':
+        from projects.models import Project
+        payload = raw_event.raw_payload or {}
+        
+        # When invoice.paid -> Project creation, we need customer and deal?
+        # Typically the event contains the raw entity details if it comes from an object,
+        # but the raw_event itself has the `customer` field which we can use.
+        # Idempotency is guarded by WorkflowExecution.
+        
+        name_base = "Project for " + (raw_event.customer.primary_email if raw_event.customer else "Unknown")
+        
+        project = Project.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            name=name_base,
+            status='planned'
+        )
+        
+        # Emit project.created event
+        new_payload = dict(raw_event.raw_payload)
+        new_payload['project_id'] = project.id
+        new_payload['source_workflow'] = workflow.name
+        
+        new_event = RawEvent.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            event_name='project.created',
+            raw_payload=new_payload,
+            processed=False
+        )
+        
+        from .tasks import process_event_task
+        process_event_task.delay(new_event.id)
+
+    elif workflow.action_type == 'create_ticket':
+        from service.models import ServiceTicket
+        name_base = "Onboarding for " + (raw_event.customer.primary_email if raw_event.customer else "Unknown")
+        ticket = ServiceTicket.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            title=name_base,
+            description="Automated ticket created from Project",
+            priority='high',
+            status='open'
+        )
+        new_payload = dict(raw_event.raw_payload or {})
+        new_payload['ticket_id'] = ticket.id
+        new_payload['source_workflow'] = workflow.name
+        
+        new_event = RawEvent.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            event_name='ticket.created',
+            raw_payload=new_payload,
+            processed=False
+        )
+        from .tasks import process_event_task
+        process_event_task.delay(new_event.id)
+
+    elif workflow.action_type == 'create_opportunity':
+        from crm.models import Deal
+        payload = raw_event.raw_payload or {}
+        name = "Opportunity from Lead " + str(payload.get('lead_id', 'Unknown'))
+        deal = Deal.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            name=name,
+            value=0.00,
+            stage='prospecting'
+        )
+        new_payload = dict(raw_event.raw_payload or {})
+        new_payload['deal_id'] = deal.id
+        new_payload['source_workflow'] = workflow.name
+        
+        new_event = RawEvent.objects.create(
+            company=raw_event.company,
+            customer=raw_event.customer,
+            event_name='deal.created',
+            raw_payload=new_payload,
+            processed=False
+        )
+        from .tasks import process_event_task
+        process_event_task.delay(new_event.id)
+
+    elif workflow.action_type == 'create_onboarding_project':
+        from projects.models import Project
+        payload = raw_event.raw_payload or {}
+        name = "Employee Onboarding for " + str(payload.get('email', 'Unknown'))
+        project = Project.objects.create(
+            company=raw_event.company,
+            customer=None, # Employee doesn't have a customer necessarily
+            name=name,
+            status='planned'
+        )
+        new_payload = dict(raw_event.raw_payload or {})
+        new_payload['project_id'] = project.id
+        new_payload['source_workflow'] = workflow.name
+        
+        new_event = RawEvent.objects.create(
+            company=raw_event.company,
+            customer=None,
+            event_name='project.created',
+            raw_payload=new_payload,
+            processed=False
+        )
+        from .tasks import process_event_task
+        process_event_task.delay(new_event.id)
+
+    elif workflow.action_type == 'send_integration_event':
+        from integrations.models import Integration, IntegrationLog
+        from integrations.connectors.factory import get_connector
+        
+        # Action payload contains integration selection
+        provider = workflow.action_event_name
+        integration = Integration.objects.filter(company=raw_event.company, provider=provider, status='active').first()
+        
+        if not integration:
+            raise ValueError(f"No active integration found for provider: {provider}")
+            
+        connector = get_connector(integration)
+        
+        # Idempotency
+        external_id = f"out_{raw_event.id}_{workflow.id}"
+        
+        log, created = IntegrationLog.objects.get_or_create(
+            integration=integration,
+            direction='outbound',
+            correlation_id=external_id,
+            defaults={
+                'company': integration.company,
+                'event_type': raw_event.event_name,
+                'status': 'processing'
+            }
+        )
+        
+        if not created and log.status == 'success':
+            return # already sent
+            
+        try:
+            result = connector.send(raw_event.raw_payload, raw_event)
+            log.status = 'success'
+            log.payload_metadata = result
+            log.save()
+        except Exception as e:
+            log.status = 'failed'
+            log.error_message = str(e)
+            log.save()
+            raise e
+
     else:
         raise ValueError(f"Unknown action_type: {workflow.action_type}")

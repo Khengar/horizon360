@@ -101,6 +101,8 @@ class Workflow(models.Model):
     condition_value = models.CharField(max_length=255, blank=True)
     action_type = models.CharField(max_length=255)
     action_event_name = models.CharField(max_length=255)
+    source_biom = models.CharField(max_length=50, blank=True)
+    destination_biom = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
