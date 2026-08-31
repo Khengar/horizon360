@@ -12,7 +12,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class IntegrationViewSet(viewsets.ModelViewSet):
+from rest_framework.decorators import action
+from .models import Integration, IntegrationLog, WebhookSubscription, WebhookDeliveryLog
+from .serializers import (
+    IntegrationSerializer, IntegrationLogSerializer,
+    WebhookSubscriptionSerializer, WebhookDeliveryLogSerializer
+)
+from .webhooks import send_single_webhook
+from cdp_core.views import get_or_create_user_company
+from cdp_core.models import RawEvent, Customer
+from cdp_core.audit import AuditLoggingMixin
+from cdp_core.idempotency import IdempotencyMixin
+
+class IntegrationViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.ModelViewSet):
     serializer_class = IntegrationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -22,18 +34,63 @@ class IntegrationViewSet(viewsets.ModelViewSet):
         
     def perform_create(self, serializer):
         company = get_or_create_user_company(self.request.user)
-        # Generate dummy config for demo
         secret = str(uuid.uuid4())
         config = {'webhook_secret': secret}
         serializer.save(company=company, config=config)
+        super().perform_create(serializer)
 
-class IntegrationLogViewSet(viewsets.ReadOnlyModelViewSet):
+
+class IntegrationLogViewSet(AuditLoggingMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = IntegrationLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         company = get_or_create_user_company(self.request.user)
         return IntegrationLog.objects.filter(company=company).order_by('-timestamp')
+
+
+class WebhookSubscriptionViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.ModelViewSet):
+    serializer_class = WebhookSubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        company = get_or_create_user_company(self.request.user)
+        return WebhookSubscription.objects.filter(company=company)
+
+    def perform_create(self, serializer):
+        company = get_or_create_user_company(self.request.user)
+        serializer.save(company=company)
+        super().perform_create(serializer)
+
+    @action(detail=True, methods=['post'], url_path='ping')
+    def ping(self, request, pk=None):
+        subscription = self.get_object()
+        ping_payload = {
+            "event": "webhook.ping",
+            "message": "Horizon 360 test webhook ping",
+            "timestamp": str(uuid.uuid4())
+        }
+        log = send_single_webhook(subscription, "webhook.ping", ping_payload)
+        return Response({
+            "status": "ping_sent",
+            "success": log.success,
+            "response_status": log.response_status,
+            "log_id": str(log.id)
+        }, status=status.HTTP_200_OK)
+
+
+class WebhookDeliveryLogViewSet(AuditLoggingMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = WebhookDeliveryLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        company = get_or_create_user_company(self.request.user)
+        queryset = WebhookDeliveryLog.objects.filter(subscription__company=company).select_related('subscription')
+        subscription_id = self.request.query_params.get('subscription')
+        if subscription_id:
+            queryset = queryset.filter(subscription_id=subscription_id)
+        return queryset
+
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
