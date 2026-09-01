@@ -1,13 +1,20 @@
 import uuid
-import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 
 class Company(models.Model):
     name = models.CharField(max_length=255)
     api_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    plan = models.CharField(max_length=50, default='growth', help_text="Tenant subscription plan (starter, growth, enterprise)")
+    config = models.JSONField(default=dict, blank=True, help_text="Tenant-level system and UI configuration")
     is_active = models.BooleanField(default=True, help_text="Uncheck to revoke API access.")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def tenant_id(self):
+        return self.id
 
     def __str__(self):
         return self.name
@@ -18,7 +25,53 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.company.name}"
-from django.core.validators import RegexValidator
+
+class Role(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='roles')
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    permissions = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text="List of permission codes e.g. ['crm.view', 'crm.edit', 'finance.admin']"
+    )
+    is_system_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('company', 'name')
+
+    def __str__(self):
+        return f"{self.name} ({self.company.name})"
+
+class UserRole(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user_roles')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='assigned_users')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user_profile', 'role')
+
+    def __str__(self):
+        return f"{self.user_profile.user.username} -> {self.role.name}"
+
+class Account(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='accounts')
+    name = models.CharField(max_length=255)
+    domain = models.CharField(max_length=255, blank=True)
+    industry = models.CharField(max_length=100, blank=True)
+    tier = models.CharField(max_length=50, default='standard')
+    annual_revenue = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    attributes = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.company.name})"
 
 # Regex validator for event_name: domain.action
 # Must contain at least one dot, use lowercase letters, and have no spaces.
@@ -50,6 +103,7 @@ class EventSchema(models.Model):
 class Customer(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, related_name='customers')
     primary_email = models.EmailField(null=True, blank=True)
     primary_phone = models.CharField(max_length=50, null=True, blank=True)
     attributes = models.JSONField(default=dict, blank=True)
@@ -126,3 +180,51 @@ class WorkflowExecution(models.Model):
 
     def __str__(self):
         return f"{self.workflow.name} on {self.raw_event.id} - {self.status}"
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ('create', 'Create'),
+        ('update', 'Update'),
+        ('delete', 'Delete'),
+        ('merge', 'Merge'),
+        ('export', 'Export'),
+        ('access', 'Access'),
+        ('anonymize', 'Anonymize'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='audit_logs')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_logs')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    entity_type = models.CharField(max_length=100, db_index=True)
+    entity_id = models.CharField(max_length=255, db_index=True)
+    diff = models.JSONField(default=dict, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"[{self.action.upper()}] {self.entity_type} ({self.entity_id}) by {self.user or 'System'}"
+
+class Segment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='segments')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    rules = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text="List of rules e.g. [{'field': 'attributes.tier', 'operator': '==', 'value': 'enterprise'}]"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.company.name})"
+
+

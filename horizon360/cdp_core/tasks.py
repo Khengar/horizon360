@@ -31,9 +31,12 @@ def process_event_task(raw_event_id):
     if not isinstance(traits, dict):
         traits = {}
     
-    # 1. Extract identity keys (from root or traits)
-    email = payload.get('email') or traits.get('email')
-    phone = payload.get('phone') or traits.get('phone')
+    # 1. Extract and normalize identity keys (from root or traits)
+    from .identity import normalize_email, normalize_phone
+    raw_email = payload.get('email') or traits.get('email')
+    raw_phone = payload.get('phone') or traits.get('phone')
+    email = normalize_email(raw_email)
+    phone = normalize_phone(raw_phone)
     
     # Extract non-identity properties (exclude email/phone, traits container, and consent)
     consent = payload.get('consent', {})
@@ -50,7 +53,7 @@ def process_event_task(raw_event_id):
 
     customer = raw_event.customer
     if not customer and (email or phone):
-        # 2. Query for exact match scoped to company
+        # 2. Query for match scoped to company
         query = Q(company=raw_event.company)
         identity_q = Q()
         if email:
@@ -58,7 +61,6 @@ def process_event_task(raw_event_id):
         if phone:
             identity_q |= Q(primary_phone=phone)
             
-        # For simplicity, we just pick the first match
         customer = Customer.objects.filter(query & identity_q).first()
         
         # 3. Create if no match exists
@@ -68,6 +70,7 @@ def process_event_task(raw_event_id):
                 primary_email=email,
                 primary_phone=phone
             )
+
             
     if customer:
         # Link RawEvent to Customer
@@ -120,5 +123,23 @@ def process_event_task(raw_event_id):
     from .workflow_service import execute_workflows
     execute_workflows(raw_event)
     
+    # 6. Stream event to Outbound Webhooks
+    try:
+        from integrations.webhooks import dispatch_webhook
+        dispatch_webhook(
+            company=raw_event.company,
+            event_name=normalized_name,
+            payload={
+                "event_name": normalized_name,
+                "event_id": raw_event.id,
+                "customer_id": str(customer.id) if customer else None,
+                "payload": payload,
+                "timestamp": raw_event.created_at.isoformat()
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error triggering webhooks for event {raw_event_id}: {e}")
+
     logger.info(f"Successfully processed RawEvent {raw_event_id} (normalized to: {normalized_name})")
     return True
+
