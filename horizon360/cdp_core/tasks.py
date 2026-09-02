@@ -103,17 +103,27 @@ def process_event_task(raw_event_id):
         customer.save()
         
         # Minimal Workflow Execution
-        if normalized_name == 'order.completed':
+        if normalized_name in ['order.completed', 'shopez.checkout.completed']:
             from crm.models import Contact, Deal
+            # Automatically create a Contact if none exists so we can map the Deal
             contact = Contact.objects.filter(customer=customer).first()
-            if contact:
-                amount = payload.get('amount', 0.0)
-                Deal.objects.create(
+            if not contact:
+                contact = Contact.objects.create(
                     company=raw_event.company,
-                    contact=contact,
-                    stage='won',
-                    value=amount
+                    customer=customer,
+                    email=email,
+                    first_name=traits.get('firstName', payload.get('firstName', 'ShopEZ Customer'))
                 )
+            
+            amount = payload.get('amount') or payload.get('totalAmount', 0.0)
+            Deal.objects.create(
+                company=raw_event.company,
+                contact=contact,
+                customer=customer,
+                title=f"ShopEZ Online Order: {payload.get('orderId', 'New')}",
+                stage='won',
+                value=amount
+            )
     
     # Mark as processed and save
     raw_event.processed = True

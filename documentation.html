@@ -178,6 +178,7 @@
     <nav class="sidebar">
         <h2>Horizon 360 SDK</h2>
         <a href="#overview">Overview & Setup</a>
+        <a href="#integration-types">Integration Types</a>
         <a href="#initialize">Initialization</a>
         <a href="#track">Tracking Events</a>
         <a href="#customer">Customer Profiles</a>
@@ -199,6 +200,27 @@
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code>npm install axios</code></pre>
             </div>
+        </section>
+
+        <section id="integration-types">
+            <h2>Integration Types & Connection Methods</h2>
+            <p>Similar to Firebase, Horizon 360 supports flexible integration methods depending on your application architecture.</p>
+            
+            <h3>1. Backend-to-Backend Integration (Recommended)</h3>
+            <p>Ideal for Node.js, Express, or Django applications (like <strong>ShopEZ</strong>). This method uses a secure Server-to-Server connection.</p>
+            <ul>
+                <li><strong>Method:</strong> Stateless REST API wrapped by our Singleton SDK.</li>
+                <li><strong>Authentication:</strong> JWT (JSON Web Token) Bearer Token generated via Admin Credentials.</li>
+                <li><strong>Security:</strong> High. Tokens are kept securely on the server.</li>
+            </ul>
+
+            <h3>2. Client-Side Integration</h3>
+            <p>Used for React, Vue, or native mobile apps tracking UI interactions directly from the user's device.</p>
+            <ul>
+                <li><strong>Method:</strong> Asynchronous event firehose.</li>
+                <li><strong>Authentication:</strong> Public API Key (Read-only/Append-only access).</li>
+                <li><strong>Security:</strong> Publicly exposed key, restricted by CORS and Rate Limiting.</li>
+            </ul>
         </section>
 
         <section id="initialize">
