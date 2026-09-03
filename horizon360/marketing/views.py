@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
-from .models import Campaign, Lead
-from .serializers import CampaignSerializer, LeadSerializer
+from .models import Campaign, Lead, CampaignTransaction
+from .serializers import CampaignSerializer, LeadSerializer, CampaignTransactionSerializer
+from rest_framework.pagination import PageNumberPagination
 from cdp_core.models import RawEvent
 
 class CampaignViewSet(viewsets.ModelViewSet):
@@ -94,3 +95,18 @@ class LeadViewSet(viewsets.ModelViewSet):
                     raw_payload={"lead_id": lead.id, "name": lead.name},
                     processed=False
                 )
+
+class CampaignTransactionPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+
+class CampaignTransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = CampaignTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CampaignTransactionPagination
+
+    def get_queryset(self):
+        return CampaignTransaction.objects.filter(company=self.request.user.profile.company).select_related('campaign')
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.profile.company)

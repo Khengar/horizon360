@@ -1,8 +1,8 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem
-from .serializers import InvoiceSerializer, PaymentSerializer, JournalEntrySerializer, ExpenseSerializer, ProductSerializer, LineItemSerializer
+from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem, Transaction
+from .serializers import InvoiceSerializer, PaymentSerializer, JournalEntrySerializer, ExpenseSerializer, ProductSerializer, LineItemSerializer, TransactionSerializer
 from cdp_core.models import RawEvent
 from cdp_core.audit import AuditLoggingMixin, record_audit_log
 from cdp_core.idempotency import IdempotencyMixin
@@ -134,3 +134,19 @@ class ProductViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.ModelViewSet)
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.profile.company)
 
+
+class TransactionPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class TransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = TransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = TransactionPagination
+
+    def get_queryset(self):
+        return Transaction.objects.filter(company=self.request.user.profile.company)
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.profile.company)

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ServiceTicketViewSet, SLAPolicyViewSet, KnowledgeArticleViewSet
+from .views import ServiceTicketViewSet, SLAPolicyViewSet, KnowledgeArticleViewSet, ServiceEntitlementViewSet
 
 router = DefaultRouter()
 router.register(r'tickets', ServiceTicketViewSet, basename='serviceticket')

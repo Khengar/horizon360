@@ -9,11 +9,13 @@ services:
       POSTGRES_PASSWORD: horizon_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Note: Internal network connects web/worker via db:5432; host port binding omitted to avoid conflicts.
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:7-alpine
-    # Note: Internal network connects web/worker via redis:6379; host port binding omitted to avoid conflicts.
+    ports:
+      - "6379:6379"
 
   web:
     build: .

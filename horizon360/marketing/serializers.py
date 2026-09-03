@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Campaign, Lead
+from .models import Campaign, Lead, CampaignTransaction
 
 class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,3 +25,11 @@ class LeadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"campaign": "Campaign does not belong to this company."})
 
         return data
+
+class CampaignTransactionSerializer(serializers.ModelSerializer):
+    campaign_name = serializers.CharField(source='campaign.name', read_only=True)
+
+    class Meta:
+        model = CampaignTransaction
+        fields = '__all__'
+        read_only_fields = ['company', 'created_at']

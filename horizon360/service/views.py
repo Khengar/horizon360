@@ -1,12 +1,15 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
-from .models import ServiceTicket, SLAPolicy, TicketComment, KnowledgeArticle
+from .models import ServiceTicket, SLAPolicy, TicketComment, KnowledgeArticle, ServiceEntitlement
 from .serializers import (
-    ServiceTicketSerializer, SLAPolicySerializer, 
-    TicketCommentSerializer, KnowledgeArticleSerializer
+    ServiceTicketSerializer,
+    SLAPolicySerializer,
+    TicketCommentSerializer,
+    KnowledgeArticleSerializer,
+    ServiceEntitlementSerializer
 )
+
 from cdp_core.models import RawEvent
 from cdp_core.audit import AuditLoggingMixin
 from cdp_core.idempotency import IdempotencyMixin
@@ -125,3 +128,13 @@ class KnowledgeArticleViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.Mode
         article.save(update_fields=['view_count'])
         return Response({"status": "view_recorded", "view_count": article.view_count}, status=status.HTTP_200_OK)
 
+
+class ServiceEntitlementViewSet(viewsets.ModelViewSet):
+    serializer_class = ServiceEntitlementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ServiceEntitlement.objects.filter(company=self.request.user.profile.company).select_related('customer', 'customer__user')
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.profile.company)

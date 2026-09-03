@@ -132,3 +132,31 @@ class KnowledgeArticle(models.Model):
     def __str__(self):
         return f"KB: {self.title} ({self.category})"
 
+
+
+class ServiceEntitlement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='service_entitlements')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='service_entitlements')
+    
+    product_id = models.CharField(max_length=100)
+    product_name = models.CharField(max_length=255)
+    purchase_date = models.DateTimeField(default=timezone.now)
+    
+    # Feedback System
+    feedback_rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="1 to 5 stars")
+    feedback_text = models.TextField(null=True, blank=True)
+    
+    # Guarantee & Returns
+    guarantee_period = models.CharField(max_length=100, help_text="e.g. '12 Months', '2 Years'")
+    guarantee_end_date = models.DateTimeField(null=True, blank=True)
+    return_issued = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-purchase_date']
+
+    def __str__(self):
+        return f"{self.product_name} - {self.customer.user.email}"

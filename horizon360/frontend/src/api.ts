@@ -134,12 +134,36 @@ export const horizonApi = {
     const res = await api.get('/finance/invoices/');
     return res.data;
   },
+  getTransactions: async (page = 1) => {
+    const res = await api.get(`/finance/transactions/?page=${page}`);
+    return res.data;
+  },
   getExpenses: async () => {
     const res = await api.get('/finance/expenses/');
     return res.data;
   },
+  createExpense: async (data: any) => {
+    const res = await api.post('/finance/expenses/', data);
+    return res.data;
+  },
+  getServiceEntitlements: async () => {
+    const res = await api.get('/service/entitlements/');
+    return res.data;
+  },
   getServiceTickets: async () => {
     const res = await api.get('/service/tickets/');
+    return res.data;
+  },
+  getCampaignTransactions: async (page = 1) => {
+    const res = await api.get(`/marketing/transactions/?page=${page}`);
+    return res.data;
+  },
+  createCampaignTransaction: async (data: any) => {
+    const res = await api.post('/marketing/transactions/', data);
+    return res.data;
+  },
+  createCampaign: async (data: any) => {
+    const res = await api.post('/marketing/campaigns/', data);
     return res.data;
   },
   getCampaigns: async () => {
@@ -150,18 +174,29 @@ export const horizonApi = {
     const res = await api.get('/marketing/leads/');
     return res.data;
   },
+  getTargets: async (page = 1) => {
+    const res = await api.get(`/projects/targets/?page=${page}`);
+    return res.data;
+  },
+  createTarget: async (data: any) => {
+    const res = await api.post('/projects/targets/', data);
+    return res.data;
+  },
   getProjects: async () => {
     const res = await api.get('/projects/projects/');
     return res.data;
   },
+  createEmployee: async (data: any) => { const res = await api.post('/hrms/employees/', data); return res.data; },
   getEmployees: async () => {
     const res = await api.get('/hrms/employees/');
     return res.data;
   },
+  createLeaveRequest: async (data: any) => { const res = await api.post('/hrms/leave-requests/', data); return res.data; },
   getLeaveRequests: async () => {
     const res = await api.get('/hrms/leave-requests/');
     return res.data;
   },
+  createDepartment: async (data: any) => { const res = await api.post('/hrms/departments/', data); return res.data; },
   getDepartments: async () => {
     const res = await api.get('/hrms/departments/');
     return res.data;
@@ -170,18 +205,22 @@ export const horizonApi = {
     const res = await api.get('/finance/products/');
     return res.data;
   },
+  createPartner: async (data: any) => { const res = await api.post('/partner/partners/', data); return res.data; },
   getPartners: async () => {
     const res = await api.get('/partner/partners/');
     return res.data;
   },
+  createPartnerOpportunity: async (data: any) => { const res = await api.post('/partner/opportunities/', data); return res.data; },
   getPartnerOpportunities: async () => {
     const res = await api.get('/partner/opportunities/');
     return res.data;
   },
+  createVendor: async (data: any) => { const res = await api.post('/vendor/vendors/', data); return res.data; },
   getVendors: async () => {
     const res = await api.get('/vendor/vendors/');
     return res.data;
   },
+  createPurchaseOrder: async (data: any) => { const res = await api.post('/vendor/purchase-orders/', data); return res.data; },
   getPurchaseOrders: async () => {
     const res = await api.get('/vendor/purchase-orders/');
     return res.data;

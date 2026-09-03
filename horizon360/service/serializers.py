@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ServiceTicket, SLAPolicy, TicketComment, KnowledgeArticle
+from .models import ServiceTicket, SLAPolicy, TicketComment, KnowledgeArticle, ServiceEntitlement
 
 class SLAPolicySerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,3 +49,9 @@ class ServiceTicketSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"sla_policy": "SLA Policy does not belong to this company."})
         return data
 
+
+class ServiceEntitlementSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.user.get_full_name', read_only=True)
+    class Meta:
+        model = ServiceEntitlement
+        fields = '__all__'

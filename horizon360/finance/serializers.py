@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem
+from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem, Transaction
 
 class PaymentSerializer(serializers.ModelSerializer):
     invoice_number = serializers.CharField(source='invoice.invoice_number', read_only=True)
@@ -80,3 +80,8 @@ class LineItemSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['invoice']
 
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'

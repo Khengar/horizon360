@@ -61,3 +61,25 @@ class Lead(models.Model):
     def __str__(self):
         return f"Lead: {self.name} ({self.lead_score} pts) - {self.status}"
 
+
+from django.utils import timezone
+
+class CampaignTransaction(models.Model):
+    TYPE_CHOICES = [
+        ('spend', 'Campaign Spend (Expense)'),
+        ('roi', 'Attributed Revenue (ROI)')
+    ]
+    
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='campaign_transactions')
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.campaign.name} - {self.transaction_type.upper()}: ${self.amount}"

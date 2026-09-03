@@ -204,3 +204,24 @@ class JournalEntry(models.Model):
     def __str__(self):
         return f"[{self.entry_type.upper()}] {self.account_code}: {self.currency} {self.amount} ({self.reference_type})"
 
+
+class Transaction(models.Model):
+    TYPE_CHOICES = [
+        ('earn', 'Earn (Credit)'),
+        ('loss', 'Loss (Debit)')
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.transaction_type.upper()}: {self.description} - {self.amount}"
+
