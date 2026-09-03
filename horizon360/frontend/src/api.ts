@@ -134,6 +134,10 @@ export const horizonApi = {
     const res = await api.get('/finance/invoices/');
     return res.data;
   },
+  getExpenses: async () => {
+    const res = await api.get('/finance/expenses/');
+    return res.data;
+  },
   getServiceTickets: async () => {
     const res = await api.get('/service/tickets/');
     return res.data;
@@ -163,11 +167,7 @@ export const horizonApi = {
     return res.data;
   },
   getProducts: async () => {
-    const res = await api.get('/commerce/products/');
-    return res.data;
-  },
-  getOrders: async () => {
-    const res = await api.get('/commerce/orders/');
+    const res = await api.get('/finance/products/');
     return res.data;
   },
   getPartners: async () => {

@@ -467,7 +467,6 @@ class WorkflowViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.ModelViewSet
             {"group": "Projects", "name": "Project Created → Service Onboarding", "trigger_event": "project.created", "action_type": "create_ticket", "source_biom": "Projects", "destination_biom": "Service"},
             {"group": "Service", "name": "Critical Ticket → Executive Escalation", "trigger_event": "ticket.critical", "action_type": "ai_generate_insight", "source_biom": "Service", "destination_biom": "Intelligence"},
             {"group": "HRMS", "name": "Employee Created → Onboarding Project", "trigger_event": "employee.created", "action_type": "create_onboarding_project", "source_biom": "HRMS", "destination_biom": "Projects"},
-            {"group": "Commerce", "name": "Order Fulfilled → Customer Success Follow-up", "trigger_event": "order.fulfilled", "action_type": "create_ticket", "source_biom": "Commerce", "destination_biom": "Service"},
             {"group": "Partner", "name": "Partner Opportunity Won → Sales Workflow", "trigger_event": "partner_opportunity.won", "action_type": "create_opportunity", "source_biom": "Partner", "destination_biom": "Sales"},
             {"group": "Vendor", "name": "Purchase Order Approved → Finance Event", "trigger_event": "purchase_order.approved", "action_type": "ai_generate_insight", "source_biom": "Vendor", "destination_biom": "Finance"}
         ]

@@ -5,6 +5,18 @@ from django.utils import timezone
 from cdp_core.models import Company, Customer
 from crm.models import Deal
 
+class Product(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='finance_products')
+    name = models.CharField(max_length=255)
+    sku = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
 class Invoice(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -38,6 +50,19 @@ class Invoice(models.Model):
     def __str__(self):
         return f"{self.invoice_number} ({self.currency} {self.amount}) - {self.status}"
 
+class LineItem(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='line_items')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='line_items')
+    description = models.CharField(max_length=255, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    @property
+    def total_price(self):
+        return self.quantity * self.unit_price
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name if self.product else self.description}"
 
 class Payment(models.Model):
     METHOD_CHOICES = [
@@ -138,6 +163,22 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment {self.id}: {self.currency} {self.amount} ({self.status})"
 
+class Expense(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid')
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='expenses')
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Expense: {self.description} ({self.amount} {self.currency}) - {self.status}"
 
 class JournalEntry(models.Model):
     ENTRY_TYPES = [

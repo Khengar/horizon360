@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Invoice, Payment, JournalEntry
-from .serializers import InvoiceSerializer, PaymentSerializer, JournalEntrySerializer
+from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem
+from .serializers import InvoiceSerializer, PaymentSerializer, JournalEntrySerializer, ExpenseSerializer, ProductSerializer, LineItemSerializer
 from cdp_core.models import RawEvent
 from cdp_core.audit import AuditLoggingMixin, record_audit_log
 from cdp_core.idempotency import IdempotencyMixin
@@ -112,4 +112,25 @@ class JournalEntryViewSet(AuditLoggingMixin, viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return JournalEntry.objects.filter(company=self.request.user.profile.company)
+
+
+class ExpenseViewSet(viewsets.ModelViewSet):
+    serializer_class = ExpenseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Expense.objects.filter(company=self.request.user.profile.company)
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.profile.company)
+
+class ProductViewSet(IdempotencyMixin, AuditLoggingMixin, viewsets.ModelViewSet):
+    serializer_class = ProductSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Product.objects.filter(company=self.request.user.profile.company)
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.profile.company)
 

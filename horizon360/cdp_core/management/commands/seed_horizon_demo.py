@@ -3,11 +3,10 @@ from django.contrib.auth.models import User
 from cdp_core.models import Company, Customer, UserProfile, Workflow, RawEvent
 from marketing.models import Campaign, Lead
 from crm.models import Deal
-from finance.models import Invoice
+from finance.models import Invoice, Expense, Product
 from projects.models import Project
 from service.models import ServiceTicket
 from hrms.models import Department, Employee
-from commerce.models import Product, Order
 from partner.models import Partner, PartnerOpportunity
 from vendor.models import Vendor, PurchaseOrder
 from integrations.models import Integration
@@ -55,6 +54,10 @@ class Command(BaseCommand):
         
         # 3. Sales BIOM
         deal, _ = Deal.objects.get_or_create(company=company, customer=cust1, title="Enterprise Subscription - Acme", defaults={"value": 120000.00, "stage": "won"})
+
+        # 4. Finance BIOM
+        Expense.objects.get_or_create(company=company, description="Server Hosting Q4", defaults={"amount": 4500.00, "status": "paid"})
+        Expense.objects.get_or_create(company=company, description="Marketing Agency Retainer", defaults={"amount": 12500.00, "status": "pending"})
         
         # Generate the deal.won event to trigger the chain
         if created or not RawEvent.objects.filter(company=company, event_name="deal.won").exists():
@@ -88,9 +91,8 @@ class Command(BaseCommand):
         dept, _ = Department.objects.get_or_create(company=company, name="Engineering")
         emp, _ = Employee.objects.get_or_create(company=company, email="alice.smith@quantumard.com", defaults={"department": dept, "first_name": "Alice", "last_name": "Smith", "role": "Senior Engineer", "status": "active"})
         
-        # 8. Commerce BIOM
+        # Add Product to Finance BIOM
         prod, _ = Product.objects.get_or_create(company=company, sku="SRV-001", defaults={"name": "Cloud Storage 1TB", "price": 150.00})
-        order, _ = Order.objects.get_or_create(company=company, customer=cust2, defaults={"status": "fulfilled", "total_amount": 150.00})
         
         # 9. Partner BIOM
         partner, _ = Partner.objects.get_or_create(company=company, email="alliance@sys.com", defaults={"name": "Alliance Systems", "type": "Reseller", "status": "active"})

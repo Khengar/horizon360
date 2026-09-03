@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'marketing',
     'projects',
     'hrms',
-    'commerce',
     'partner',
     'vendor',
     'integrations',

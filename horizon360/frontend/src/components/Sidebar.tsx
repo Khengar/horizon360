@@ -26,7 +26,6 @@ export const Sidebar = () => {
     { name: 'Marketing', path: '/marketing', icon: Users, comingSoon: false },
     { name: 'Projects', path: '/projects', icon: LayoutDashboard, comingSoon: false },
     { name: 'HRMS', path: '/hrms', icon: Users, comingSoon: false },
-    { name: 'Commerce', path: '/commerce', icon: Database, comingSoon: false },
     { name: 'Partner', path: '/partner', icon: Link, comingSoon: false },
     { name: 'Vendor', path: '/vendor', icon: Link, comingSoon: false },
   ];

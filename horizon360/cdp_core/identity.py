@@ -136,13 +136,6 @@ def merge_customers(
         except Exception:
             tickets_count = 0
 
-        # Commerce Orders
-        try:
-            from commerce.models import Order
-            orders_count = Order.objects.filter(customer=secondary_customer).update(customer=primary_customer)
-        except Exception:
-            orders_count = 0
-
         # Projects
         try:
             from projects.models import Project
@@ -178,7 +171,6 @@ def merge_customers(
                 "deals": deals_count,
                 "invoices": invoices_count,
                 "tickets": tickets_count,
-                "orders": orders_count,
                 "projects": projects_count,
                 "leads": leads_count,
                 "partner_opportunities": partner_opps_count

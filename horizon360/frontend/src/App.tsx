@@ -7,7 +7,6 @@ import { Service } from './pages/Service';
 import { Marketing } from './pages/Marketing';
 import { Projects } from './pages/Projects';
 import { HRMS } from './pages/HRMS';
-import { Commerce } from './pages/Commerce';
 import { Partner } from './pages/Partner';
 import { Vendor } from './pages/Vendor';
 import { Workflows } from './pages/Workflows';
@@ -79,7 +78,6 @@ function App() {
                   <Route path="/marketing" element={<Marketing />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/hrms" element={<HRMS />} />
-                  <Route path="/commerce" element={<Commerce />} />
                   <Route path="/partner" element={<Partner />} />
                   <Route path="/vendor" element={<Vendor />} />
                   <Route path="/workflows" element={<Workflows />} />

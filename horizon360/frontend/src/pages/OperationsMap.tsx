@@ -15,11 +15,11 @@ export const OperationsMap = () => {
       try {
         const [
           deals, invoices, tickets, campaigns,
-          projects, employees, orders, partners,
+          projects, employees, partners,
           vendors, wfs, integs
         ] = await Promise.all([
           horizonApi.getDeals(), horizonApi.getInvoices(), horizonApi.getServiceTickets(), horizonApi.getCampaigns(),
-          horizonApi.getProjects(), horizonApi.getEmployees(), horizonApi.getOrders(), horizonApi.getPartners(),
+          horizonApi.getProjects(), horizonApi.getEmployees(), horizonApi.getPartners(),
           horizonApi.getVendors(), horizonApi.getWorkflows(), horizonApi.getIntegrations()
         ]);
         
@@ -30,7 +30,6 @@ export const OperationsMap = () => {
           Marketing: { records: campaigns.length, status: 'Operational', path: '/marketing' },
           Projects: { records: projects.length, status: 'Operational', path: '/projects' },
           HRMS: { records: employees.length, status: 'Operational', path: '/hrms' },
-          Commerce: { records: orders.length, status: 'Operational', path: '/commerce' },
           Partner: { records: partners.length, status: 'Operational', path: '/partner' },
           Vendor: { records: vendors.length, status: 'Operational', path: '/vendor' }
         });
@@ -52,7 +51,6 @@ export const OperationsMap = () => {
     { name: 'Projects', icon: LayoutDashboard, color: 'text-indigo-600', bg: 'bg-indigo-100', border: 'border-indigo-200' },
     { name: 'Service', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200' },
     { name: 'HRMS', icon: Users, color: 'text-orange-600', bg: 'bg-orange-100', border: 'border-orange-200' },
-    { name: 'Commerce', icon: ShoppingCart, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200' },
     { name: 'Partner', icon: Users, color: 'text-teal-600', bg: 'bg-teal-100', border: 'border-teal-200' },
     { name: 'Vendor', icon: Truck, color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-200' },
   ];

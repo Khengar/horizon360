@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Invoice, Payment, JournalEntry
+from .models import Invoice, Payment, JournalEntry, Expense, Product, LineItem
 
 class PaymentSerializer(serializers.ModelSerializer):
     invoice_number = serializers.CharField(source='invoice.invoice_number', read_only=True)
@@ -59,4 +59,24 @@ class InvoiceSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"deal": "Deal customer does not match invoice customer."})
             
         return data
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = '__all__'
+        read_only_fields = ['company', 'created_at']
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+        read_only_fields = ['company', 'created_at']
+
+class LineItemSerializer(serializers.ModelSerializer):
+    total_price = serializers.ReadOnlyField()
+
+    class Meta:
+        model = LineItem
+        fields = '__all__'
+        read_only_fields = ['invoice']
 
