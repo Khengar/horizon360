@@ -259,5 +259,16 @@ export const horizonApi = {
   getCompanies: async () => {
     const res = await api.get('/accounts/');
     return res.data;
-  }
+  },
+
+  // Business Orchestration
+  getOrchestrationStatus: async (dealId?: number | string) => {
+    const params = dealId ? { deal_id: dealId } : {};
+    const res = await api.get('/crm/orchestration/', { params });
+    return res.data;
+  },
+  triggerOrchestration: async (dealId: number | string) => {
+    const res = await api.post('/crm/orchestration/', { deal_id: dealId });
+    return res.data;
+  },
 };

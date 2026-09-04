@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { horizonApi } from '../api';
 import { Download, Search, Plus, Filter } from 'lucide-react';
 
 interface CRMEntityConfig {
   title: string;
-  fetchFn: () => Promise<any[]>;
+  fetchFn: () => Promise<any>;
   columns: { key: string; label: string; render?: (val: any, row: any) => React.ReactNode }[];
 }
 
@@ -124,6 +125,9 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
               <tr>
+                <th className="w-12 px-4 py-3 text-gray-400 font-normal border-r border-gray-200 bg-gray-100 text-center text-xs">
+                  #
+                </th>
                 <th className="w-12 px-6 py-3">
                   <input type="checkbox" className="rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
                 </th>
@@ -138,19 +142,22 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={config.columns.length + 2} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={config.columns.length + 3} className="px-6 py-12 text-center text-gray-500">
                     Loading {config.title.toLowerCase()}...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={config.columns.length + 2} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={config.columns.length + 3} className="px-6 py-12 text-center text-gray-500">
                     No records found. Data is uniformly synced from Level 2 CDP.
                   </td>
                 </tr>
               ) : (
                 data.map((row, idx) => (
                   <tr key={row.id || idx} className="hover:bg-gray-50 cursor-pointer">
+                    <td className="px-4 py-4 text-center text-gray-400 text-xs font-mono border-r border-gray-200 bg-gray-50">
+                      {idx + 1}
+                    </td>
                     <td className="px-6 py-4">
                       <input type="checkbox" className="rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
                     </td>
@@ -160,7 +167,15 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
                       </td>
                     ))}
                     <td className="px-6 py-4 text-right">
-                      <button className="text-brand-600 hover:text-brand-800 text-sm font-medium">View</button>
+                      <div className="flex justify-end items-center gap-3">
+                        {entity === 'customers' ? (
+                          <Link to={`/crm/customers/${row.id}`} className="text-brand-600 hover:text-brand-800 text-sm font-medium">View</Link>
+                        ) : (
+                          <button className="text-brand-600 hover:text-brand-800 text-sm font-medium">View</button>
+                        )}
+                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+                        <button className="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))
