@@ -5,7 +5,7 @@ from .views import (
     EventIngestionView, EventSchemaViewSet, CustomerViewSet, SegmentView, 
     WorkflowViewSet, WorkflowExecutionViewSet, RawEventViewSet,
     AccountViewSet, RoleViewSet, UserRoleViewSet, AuditLogViewSet,
-    SegmentViewSet
+    SegmentViewSet, CDPPipelineView, MergeSuggestionViewSet
 )
 
 router = DefaultRouter()
@@ -19,6 +19,7 @@ router.register(r'segments-manage', SegmentViewSet, basename='segment-manage')
 router.register(r'workflows', WorkflowViewSet, basename='workflow')
 router.register(r'workflow-executions', WorkflowExecutionViewSet, basename='workflowexecution')
 router.register(r'events-history', RawEventViewSet, basename='rawevent')
+router.register(r'cdp/merge-suggestions', MergeSuggestionViewSet, basename='mergesuggestion')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
@@ -26,7 +27,7 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('events/', EventIngestionView.as_view(), name='event-ingest'),
     path('segments/<str:segment_name>/', SegmentView.as_view(), name='segment-detail'),
+    path('cdp/pipeline/', CDPPipelineView.as_view(), name='cdp-pipeline'),
     path('', include(router.urls)),
 ]
-
 

@@ -241,5 +241,23 @@ export const horizonApi = {
   createWorkflow: async (data: any) => {
     const res = await api.post('/workflows/', data);
     return res.data;
+  },
+
+  // CDP 360 Pipeline
+  getCDPPipeline: async () => {
+    const res = await api.get('/cdp/pipeline/');
+    return res.data;
+  },
+  approveMergeSuggestion: async (id: string) => {
+    const res = await api.post(`/cdp/merge-suggestions/${id}/approve/`);
+    return res.data;
+  },
+  rejectMergeSuggestion: async (id: string) => {
+    const res = await api.post(`/cdp/merge-suggestions/${id}/reject/`);
+    return res.data;
+  },
+  getCompanies: async () => {
+    const res = await api.get('/accounts/');
+    return res.data;
   }
 };

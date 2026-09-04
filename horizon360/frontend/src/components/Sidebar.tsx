@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network } from 'lucide-react';
+import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network, Radar } from 'lucide-react';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -16,11 +16,20 @@ export const Sidebar = () => {
   const topNav = [
     { name: 'Operations Map', path: '/map', icon: Map },
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Customers', path: '/profiles', icon: Users },
+    { name: 'CDP 360', path: '/cdp-360', icon: Radar },
+  ];
+
+  const [isCrmOpen, setIsCrmOpen] = React.useState(true);
+
+  const crmNav = [
+    { name: 'Customers', path: '/crm/customers', icon: Users },
+    { name: 'Companies', path: '/crm/companies', icon: Database },
+    { name: 'Opportunities', path: '/crm/opportunities', icon: LayoutDashboard },
+    { name: 'Employees', path: '/crm/employees', icon: UserCheck },
+    { name: 'Products', path: '/crm/products', icon: Link },
   ];
 
   const biomNav = [
-    { name: 'Sales', path: '/pipeline', icon: LayoutDashboard, comingSoon: false },
     { name: 'Finance', path: '/finance', icon: Database, comingSoon: false },
     { name: 'Service', path: '/service', icon: UserCheck, comingSoon: false },
     { name: 'Marketing', path: '/marketing', icon: Users, comingSoon: false },
@@ -72,6 +81,37 @@ export const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
+
+        <div>
+          <button 
+            onClick={() => setIsCrmOpen(!isCrmOpen)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 cursor-pointer"
+          >
+            <span>Universal CRM</span>
+            <span>{isCrmOpen ? '▾' : '▸'}</span>
+          </button>
+          
+          {isCrmOpen && (
+            <nav className="mt-2 space-y-1">
+              {crmNav.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-brand-50 text-brand-600 border-l-4 border-brand-600'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-l-4 border-transparent'
+                    }`
+                  }
+                >
+                  <item.icon className="w-4 h-4 mr-3" />
+                  {item.name}
+                </NavLink>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div>
           <button 

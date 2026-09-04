@@ -79,3 +79,44 @@ class RawEventSerializer(serializers.ModelSerializer):
         model = RawEvent
         fields = ['id', 'event_name', 'raw_payload', 'processed', 'created_at']
 
+from .models import IdentityEdge, MergeSuggestion, UnifiedProfile
+
+class IdentityEdgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdentityEdge
+        fields = ['id', 'identity_type', 'identity_value', 'confidence', 'source', 'is_primary', 'created_at']
+
+class MergeSuggestionSerializer(serializers.ModelSerializer):
+    primary_email = serializers.CharField(source='primary_customer.primary_email', read_only=True)
+    primary_phone = serializers.CharField(source='primary_customer.primary_phone', read_only=True)
+    secondary_email = serializers.CharField(source='secondary_customer.primary_email', read_only=True)
+    secondary_phone = serializers.CharField(source='secondary_customer.primary_phone', read_only=True)
+
+    class Meta:
+        model = MergeSuggestion
+        fields = [
+            'id', 'primary_customer', 'secondary_customer',
+            'primary_email', 'primary_phone',
+            'secondary_email', 'secondary_phone',
+            'confidence_score', 'match_reasons', 'status',
+            'reviewed_by', 'reviewed_at', 'created_at'
+        ]
+
+class UnifiedProfileSerializer(serializers.ModelSerializer):
+    customer_email = serializers.CharField(source='customer.primary_email', read_only=True)
+    customer_phone = serializers.CharField(source='customer.primary_phone', read_only=True)
+
+    class Meta:
+        model = UnifiedProfile
+        fields = [
+            'id', 'customer', 'customer_email', 'customer_phone',
+            'total_sessions', 'total_page_views', 'total_events',
+            'last_active_at', 'first_seen_at',
+            'primary_interest_category', 'engagement_score',
+            'lifecycle_stage', 'engagement_tier',
+            'company_size', 'industry', 'location_city', 'location_country',
+            'timezone', 'enrichment_source', 'enriched_at',
+            'channels_active', 'device_fingerprints',
+            'consent_status', 'marketing_consent', 'analytics_consent',
+            'created_at', 'updated_at'
+        ]

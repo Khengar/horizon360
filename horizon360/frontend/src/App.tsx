@@ -16,6 +16,8 @@ import { Login } from './pages/Login';
 import { Customer360 } from './pages/Customer360';
 import { Pipeline } from './pages/Pipeline';
 import { SettingsPage } from './pages/Settings';
+import { CDP360Dashboard } from './pages/CDP360Dashboard';
+import { CRMCoreListView } from './pages/CRMCoreListView';
 import "./App.css";
 
 // Protected Route Wrapper
@@ -70,6 +72,14 @@ function App() {
                   <Route path="/data-hub" element={<Placeholder title="Data Hub" />} />
                   <Route path="/sources" element={<Placeholder title="Connect Sources" />} />
                   <Route path="/identity" element={<Placeholder title="Identity Resolution Engine" />} />
+                  <Route path="/cdp-360" element={<CDP360Dashboard />} />
+                  
+                  {/* Universal CRM Core */}
+                  <Route path="/crm/customers" element={<CRMCoreListView entity="customers" />} />
+                  <Route path="/crm/companies" element={<CRMCoreListView entity="companies" />} />
+                  <Route path="/crm/opportunities" element={<CRMCoreListView entity="opportunities" />} />
+                  <Route path="/crm/employees" element={<CRMCoreListView entity="employees" />} />
+                  <Route path="/crm/products" element={<CRMCoreListView entity="products" />} />
                   <Route path="/profiles" element={<Dashboard />} />
                   <Route path="/pipeline" element={<Pipeline />} />
                   <Route path="/customers/:id/360" element={<Customer360 />} />

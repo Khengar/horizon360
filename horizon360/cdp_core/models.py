@@ -228,3 +228,174 @@ class Segment(models.Model):
         return f"{self.name} ({self.company.name})"
 
 
+class IdentityEdge(models.Model):
+    """
+    Stores known identity linkages between a Customer and their identifiers.
+    Enables cross-device, cross-channel identity resolution.
+    """
+    IDENTITY_TYPES = [
+        ('email', 'Email'),
+        ('phone', 'Phone'),
+        ('device_id', 'Device ID'),
+        ('cookie_id', 'Cookie ID'),
+        ('external_id', 'External ID'),
+        ('ip_address', 'IP Address'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='identity_edges')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='identity_edges')
+    identity_type = models.CharField(max_length=50, choices=IDENTITY_TYPES)
+    identity_value = models.CharField(max_length=512, db_index=True)
+    confidence = models.FloatField(default=1.0, help_text='1.0 = deterministic match')
+    source = models.CharField(max_length=100, default='ingestion', help_text='ingestion, ml_batch, manual')
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('company', 'identity_type', 'identity_value')
+        indexes = [
+            models.Index(fields=['company', 'identity_type', 'identity_value']),
+        ]
+
+    def __str__(self):
+        return f"{self.identity_type}:{self.identity_value} -> Customer {self.customer_id}"
+
+
+class MergeSuggestion(models.Model):
+    """
+    Stores ML-generated merge suggestions for admin review.
+    Confidence bands: >95% auto-merge, 70-94% suggest, <70% skip.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('auto_merged', 'Auto-Merged'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='merge_suggestions')
+    primary_customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='merge_suggestions_primary')
+    secondary_customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='merge_suggestions_secondary')
+    confidence_score = models.FloatField(help_text='0.0-1.0 confidence that these are the same person')
+    match_reasons = models.JSONField(default=list, blank=True, help_text='e.g. [{"field": "email_domain", "score": 0.9}]')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-confidence_score']
+
+    def __str__(self):
+        return f"Merge Suggestion: {self.primary_customer_id} <- {self.secondary_customer_id} ({self.confidence_score:.0%})"
+
+
+class UnifiedProfile(models.Model):
+    """
+    Level 3 Unified Profile — the single master record.
+    Aggregates all cross-device sessions and omnichannel interactions.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='unified_profile')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='unified_profiles')
+
+    # Computed Metrics (Profile Enrichment)
+    total_sessions = models.IntegerField(default=0)
+    total_page_views = models.IntegerField(default=0)
+    total_events = models.IntegerField(default=0)
+    last_active_at = models.DateTimeField(null=True, blank=True)
+    first_seen_at = models.DateTimeField(null=True, blank=True)
+    primary_interest_category = models.CharField(max_length=255, blank=True)
+    engagement_score = models.FloatField(default=0.0, help_text='0-100 engagement score')
+
+    # Lifecycle & Scoring
+    LIFECYCLE_STAGES = [
+        ('anonymous', 'Anonymous'),
+        ('known', 'Known'),
+        ('engaged', 'Engaged'),
+        ('qualified', 'Marketing Qualified'),
+        ('opportunity', 'Sales Opportunity'),
+        ('customer', 'Customer'),
+        ('advocate', 'Advocate'),
+        ('churned', 'Churned'),
+    ]
+    ENGAGEMENT_TIERS = [
+        ('cold', 'Cold'),
+        ('warm', 'Warm'),
+        ('hot', 'Hot'),
+        ('on_fire', 'On Fire'),
+    ]
+    lifecycle_stage = models.CharField(max_length=30, choices=LIFECYCLE_STAGES, default='anonymous')
+    engagement_tier = models.CharField(max_length=20, choices=ENGAGEMENT_TIERS, default='cold')
+
+    # Firmographic / Demographic Enrichment
+    company_size = models.CharField(max_length=50, blank=True)
+    industry = models.CharField(max_length=100, blank=True)
+    location_city = models.CharField(max_length=100, blank=True)
+    location_country = models.CharField(max_length=100, blank=True)
+    timezone = models.CharField(max_length=50, blank=True)
+    enrichment_source = models.CharField(max_length=100, blank=True)
+    enriched_at = models.DateTimeField(null=True, blank=True)
+
+    # Channel Activity Summary
+    channels_active = models.JSONField(default=list, blank=True)
+    device_fingerprints = models.JSONField(default=list, blank=True)
+
+    # Consent Summary
+    consent_status = models.CharField(max_length=30, default='unknown')
+    marketing_consent = models.BooleanField(default=False)
+    analytics_consent = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-engagement_score']
+
+    def __str__(self):
+        return f"UnifiedProfile for Customer {self.customer_id} (Score: {self.engagement_score})"
+
+
+class CDPPipelineStatus(models.Model):
+    """Tracks the real-time status of each CDP pipeline phase for dashboard display."""
+    company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='cdp_pipeline_status')
+
+    # Phase 1: Raw Data Collection
+    total_events_ingested = models.IntegerField(default=0)
+    events_today = models.IntegerField(default=0)
+    events_pending = models.IntegerField(default=0)
+    events_errors = models.IntegerField(default=0)
+    ingestion_active = models.BooleanField(default=True)
+
+    # Phase 2: Identity Resolution
+    deterministic_matches = models.IntegerField(default=0)
+    ml_batch_queue_size = models.IntegerField(default=0)
+    auto_merged_count = models.IntegerField(default=0)
+    suggested_merges_pending = models.IntegerField(default=0)
+    last_batch_run = models.DateTimeField(null=True, blank=True)
+    identity_active = models.BooleanField(default=True)
+
+    # Phase 3: Data Unification
+    unified_profiles_count = models.IntegerField(default=0)
+    unification_active = models.BooleanField(default=True)
+
+    # Phase 4: Profile Enrichment
+    enriched_profiles_count = models.IntegerField(default=0)
+    enrichment_active = models.BooleanField(default=True)
+
+    # Phase 5: Intelligence Layer
+    active_segments_count = models.IntegerField(default=0)
+    total_segment_audience = models.IntegerField(default=0)
+    intelligence_active = models.BooleanField(default=True)
+
+    # Consent
+    consent_opt_in = models.IntegerField(default=0)
+    consent_opt_out = models.IntegerField(default=0)
+    consent_pending = models.IntegerField(default=0)
+    dsar_requests = models.IntegerField(default=0)
+    rtbf_erasures = models.IntegerField(default=0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"CDP Pipeline Status for {self.company.name}"
