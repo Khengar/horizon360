@@ -493,3 +493,196 @@ class RawEventViewSet(viewsets.ReadOnlyModelViewSet):
         return RawEvent.objects.filter(company=company).order_by('-created_at')
 
 
+from .models import MergeSuggestion, UnifiedProfile, IdentityEdge
+from .serializers import MergeSuggestionSerializer, UnifiedProfileSerializer, IdentityEdgeSerializer
+from .identity import merge_customers
+from django.utils.timezone import now as tz_now
+from django.db.models import Count, Q
+
+
+class CDPPipelineView(APIView):
+    """
+    Returns the real-time CDP pipeline status for the dashboard flowchart.
+    Computes live stats across all 5 pipeline phases.
+    """
+    def get(self, request):
+        company = get_or_create_user_company(request.user)
+
+        # Phase 1: Raw Data Collection
+        total_events = RawEvent.objects.filter(company=company).count()
+        events_pending = RawEvent.objects.filter(company=company, processed=False).count()
+        events_today = RawEvent.objects.filter(
+            company=company,
+            created_at__date=tz_now().date()
+        ).count()
+
+        # Phase 2: Identity Resolution
+        customers_count = Customer.objects.filter(company=company).count()
+        merge_suggestions_pending = MergeSuggestion.objects.filter(
+            company=company, status='pending'
+        ).count()
+        auto_merged = MergeSuggestion.objects.filter(
+            company=company, status='auto_merged'
+        ).count()
+
+        # Phase 3: Data Unification
+        unified_count = UnifiedProfile.objects.filter(company=company).count()
+
+        # Phase 4: Profile Enrichment
+        enriched_count = UnifiedProfile.objects.filter(
+            company=company, enriched_at__isnull=False
+        ).count()
+
+        # Phase 5: Intelligence Layer
+        segments_count = Segment.objects.filter(company=company, is_active=True).count()
+
+        # Consent aggregation
+        consent_optin = Customer.objects.filter(
+            company=company, consent__marketing_consent=True
+        ).count()
+        consent_optout = Customer.objects.filter(
+            company=company, consent__marketing_consent=False
+        ).exclude(consent={}).count()
+
+        # Audit & Privacy stats
+        audit_count = AuditLog.objects.filter(company=company).count()
+        dsar_count = AuditLog.objects.filter(company=company, action='export').count()
+        rtbf_count = AuditLog.objects.filter(company=company, action='anonymize').count()
+
+        # Recent events stream (for live display)
+        recent_events = RawEvent.objects.filter(company=company).order_by('-created_at')[:10]
+
+        # Event type distribution
+        event_types = list(
+            RawEvent.objects.filter(company=company)
+            .values_list('event_name', flat=True)
+            .distinct()[:20]
+        )
+
+        # Segments data
+        segments = Segment.objects.filter(company=company, is_active=True)
+
+        # Merge suggestions for review queue
+        merge_suggestions = MergeSuggestion.objects.filter(
+            company=company, status='pending'
+        ).select_related('primary_customer', 'secondary_customer')[:10]
+
+        return Response({
+            'pipeline': {
+                'raw_data': {
+                    'total_events': total_events,
+                    'events_today': events_today,
+                    'events_pending': events_pending,
+                    'events_errors': 0,
+                    'active': True,
+                    'phase_label': 'Raw Data Collection'
+                },
+                'identity_resolution': {
+                    'deterministic_matches': total_events - events_pending,
+                    'profiles_created': customers_count,
+                    'ml_batch_queue': merge_suggestions_pending,
+                    'auto_merged': auto_merged,
+                    'suggested_merges': merge_suggestions_pending,
+                    'active': True,
+                    'phase_label': 'Identity Resolution'
+                },
+                'data_unification': {
+                    'unified_profiles': unified_count,
+                    'total_customers': customers_count,
+                    'active': True,
+                    'phase_label': 'Data Unification'
+                },
+                'profile_enrichment': {
+                    'enriched_profiles': enriched_count,
+                    'total_unified': unified_count,
+                    'active': True,
+                    'phase_label': 'Profile Enrichment'
+                },
+                'intelligence': {
+                    'active_segments': segments_count,
+                    'active': True,
+                    'phase_label': 'Intelligence Layer'
+                }
+            },
+            'features': {
+                'event_tracking': {
+                    'total_schemas': EventSchema.objects.filter(company=company).count(),
+                    'event_types': event_types,
+                    'recent_events': RawEventSerializer(recent_events, many=True).data
+                },
+                'segmentation': {
+                    'total_segments': segments_count,
+                    'segments': SegmentSerializer(segments, many=True).data
+                },
+                'consent': {
+                    'opt_in': consent_optin,
+                    'opt_out': consent_optout,
+                    'pending': max(customers_count - consent_optin - consent_optout, 0),
+                    'dsar_requests': dsar_count,
+                    'rtbf_erasures': rtbf_count,
+                    'audit_entries': audit_count
+                }
+            },
+            'merge_suggestions': MergeSuggestionSerializer(merge_suggestions, many=True).data
+        })
+
+
+class MergeSuggestionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for viewing and managing merge suggestions.
+    """
+    serializer_class = MergeSuggestionSerializer
+
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return MergeSuggestion.objects.none()
+        company = get_or_create_user_company(self.request.user)
+        return MergeSuggestion.objects.filter(company=company).select_related(
+            'primary_customer', 'secondary_customer'
+        )
+
+    @action(detail=True, methods=['post'], url_path='approve')
+    def approve(self, request, pk=None):
+        """Approve and execute the merge suggestion."""
+        suggestion = self.get_object()
+        if suggestion.status != 'pending':
+            return Response(
+                {'error': f'Suggestion is already {suggestion.status}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            result = merge_customers(
+                suggestion.primary_customer,
+                suggestion.secondary_customer,
+                user=request.user
+            )
+            suggestion.status = 'approved'
+            suggestion.reviewed_by = request.user
+            suggestion.reviewed_at = tz_now()
+            suggestion.save()
+            return Response({
+                'status': 'approved',
+                'merge_result': result
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        """Reject the merge suggestion."""
+        suggestion = self.get_object()
+        if suggestion.status != 'pending':
+            return Response(
+                {'error': f'Suggestion is already {suggestion.status}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        suggestion.status = 'rejected'
+        suggestion.reviewed_by = request.user
+        suggestion.reviewed_at = tz_now()
+        suggestion.save()
+        return Response({'status': 'rejected'})

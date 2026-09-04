@@ -52,4 +52,24 @@ class SegmentAdmin(admin.ModelAdmin):
     list_filter = ('company', 'is_active')
     search_fields = ('name',)
 
+from .models import IdentityEdge, MergeSuggestion, UnifiedProfile, CDPPipelineStatus
 
+@admin.register(IdentityEdge)
+class IdentityEdgeAdmin(admin.ModelAdmin):
+    list_display = ['identity_type', 'identity_value', 'customer', 'confidence', 'source', 'created_at']
+    list_filter = ['identity_type', 'source']
+    search_fields = ['identity_value']
+
+@admin.register(MergeSuggestion)
+class MergeSuggestionAdmin(admin.ModelAdmin):
+    list_display = ['primary_customer', 'secondary_customer', 'confidence_score', 'status', 'created_at']
+    list_filter = ['status']
+
+@admin.register(UnifiedProfile)
+class UnifiedProfileAdmin(admin.ModelAdmin):
+    list_display = ['customer', 'engagement_score', 'lifecycle_stage', 'engagement_tier', 'enriched_at']
+    list_filter = ['lifecycle_stage', 'engagement_tier']
+
+@admin.register(CDPPipelineStatus)
+class CDPPipelineStatusAdmin(admin.ModelAdmin):
+    list_display = ['company', 'total_events_ingested', 'unified_profiles_count', 'updated_at']

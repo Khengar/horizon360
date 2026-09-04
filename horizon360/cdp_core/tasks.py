@@ -133,6 +133,11 @@ def process_event_task(raw_event_id):
     from .workflow_service import execute_workflows
     execute_workflows(raw_event)
     
+    # 5b. Real-time Profile Unification and Enrichment
+    if customer:
+        from .enrichment_tasks import update_single_profile_task
+        update_single_profile_task.delay(customer.id)
+    
     # 6. Stream event to Outbound Webhooks
     try:
         from integrations.webhooks import dispatch_webhook

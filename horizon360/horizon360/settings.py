@@ -179,3 +179,16 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
 }
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'batch-identity-resolution': {
+        'task': 'cdp_core.identity_batch.run_batch_identity_resolution',
+        'schedule': crontab(minute=0, hour='*/1'),
+    },
+    'profile-enrichment-sweep': {
+        'task': 'cdp_core.enrichment_tasks.enrich_all_company_profiles',
+        'schedule': crontab(minute=30, hour='*/2'),
+    },
+}
