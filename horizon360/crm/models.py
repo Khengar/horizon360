@@ -66,10 +66,10 @@ class Contact(models.Model):
 
 class Deal(models.Model):
     STAGE_CHOICES = [
+        ('visitor', 'Visitor'),
         ('lead', 'Lead'),
-        ('qualified', 'Qualified'),
+        ('opportunity', 'Opportunity'),
         ('proposal', 'Proposal'),
-        ('negotiation', 'Negotiation'),
         ('won', 'Won'),
         ('lost', 'Lost'),
     ]
@@ -176,6 +176,11 @@ class Deal(models.Model):
                 processed=False
             )
             process_event_task.delay(raw_event.id)
+
+        # Trigger cross-BIOM orchestration when deal is won
+        if self.stage == 'won' and old_stage != 'won':
+            from crm.tasks import run_deal_won_orchestration
+            run_deal_won_orchestration.delay(self.id)
 
     def __str__(self):
         return f"Deal: {self.title} - {self.get_stage_display()} - ${self.value}"

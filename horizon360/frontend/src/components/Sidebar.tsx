@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network, Radar } from 'lucide-react';
+import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network, Radar, TrendingUp } from 'lucide-react';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -30,18 +30,17 @@ export const Sidebar = () => {
   ];
 
   const biomNav = [
+    { name: 'Sales', path: '/sales', icon: TrendingUp, comingSoon: false },
     { name: 'Finance', path: '/finance', icon: Database, comingSoon: false },
-    { name: 'Service', path: '/service', icon: UserCheck, comingSoon: false },
-    { name: 'Marketing', path: '/marketing', icon: Users, comingSoon: false },
     { name: 'Projects', path: '/projects', icon: LayoutDashboard, comingSoon: false },
     { name: 'HRMS', path: '/hrms', icon: Users, comingSoon: false },
-    { name: 'Partner', path: '/partner', icon: Link, comingSoon: false },
-    { name: 'Vendor', path: '/vendor', icon: Link, comingSoon: false },
+    { name: 'Service', path: '/service', icon: UserCheck, comingSoon: false },
   ];
 
   const bottomNav = [
     { name: 'Intelligence', path: '/intelligence', icon: Database },
     { name: 'Workflows', path: '/workflows', icon: Share2 },
+    { name: 'Orchestration', path: '/orchestration', icon: Network },
     { name: 'Integrations', path: '/integrations', icon: Network },
     { name: 'Data Hub', path: '/data-hub', icon: Database },
     { name: 'Sources', path: '/sources', icon: Link },

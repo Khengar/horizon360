@@ -43,6 +43,11 @@ export const Pipeline = () => {
       // Optimistic update
       setDeals(deals.map(d => d.id === dealId ? { ...d, stage: newStage } : d));
       await horizonApi.updateDeal(dealId, { stage: newStage });
+      
+      // Notify user when cross-BIOM orchestration is triggered
+      if (newStage === 'won') {
+        alert('🎉 Deal Won! Cross-BIOM Orchestration has been triggered automatically.\n\n• Finance: Invoice generated\n• Projects: Delivery project created\n• Service: Onboarding ticket opened\n• HRMS: Resource allocation requested\n\nView the Orchestration Hub for details.');
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to update stage.');

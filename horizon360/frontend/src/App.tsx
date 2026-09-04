@@ -17,7 +17,10 @@ import { Customer360 } from './pages/Customer360';
 import { Pipeline } from './pages/Pipeline';
 import { SettingsPage } from './pages/Settings';
 import { CDP360Dashboard } from './pages/CDP360Dashboard';
+import { CRMContactProfile } from './pages/CRMContactProfile';
 import { CRMCoreListView } from './pages/CRMCoreListView';
+import { OrchestrationHub } from './pages/OrchestrationHub';
+import { SalesBIOM } from './pages/SalesBIOM';
 import "./App.css";
 
 // Protected Route Wrapper
@@ -76,12 +79,14 @@ function App() {
                   
                   {/* Universal CRM Core */}
                   <Route path="/crm/customers" element={<CRMCoreListView entity="customers" />} />
+                  <Route path="/crm/customers/:id" element={<CRMContactProfile />} />
                   <Route path="/crm/companies" element={<CRMCoreListView entity="companies" />} />
                   <Route path="/crm/opportunities" element={<CRMCoreListView entity="opportunities" />} />
                   <Route path="/crm/employees" element={<CRMCoreListView entity="employees" />} />
                   <Route path="/crm/products" element={<CRMCoreListView entity="products" />} />
                   <Route path="/profiles" element={<Dashboard />} />
-                  <Route path="/pipeline" element={<Pipeline />} />
+                  <Route path="/sales" element={<SalesBIOM />} />
+                  <Route path="/pipeline" element={<SalesBIOM />} />
                   <Route path="/customers/:id/360" element={<Customer360 />} />
                   <Route path="/finance" element={<Finance />} />
                   <Route path="/service" element={<Service />} />
@@ -91,6 +96,7 @@ function App() {
                   <Route path="/partner" element={<Partner />} />
                   <Route path="/vendor" element={<Vendor />} />
                   <Route path="/workflows" element={<Workflows />} />
+                  <Route path="/orchestration" element={<OrchestrationHub />} />
                   <Route path="/map" element={<OperationsMap />} />
                   <Route path="/integrations" element={<Integrations />} />
                   <Route path="/settings" element={<SettingsPage />} />
