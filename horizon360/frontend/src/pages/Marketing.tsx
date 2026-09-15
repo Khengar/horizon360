@@ -31,8 +31,8 @@ export const Marketing = () => {
       horizonApi.getTransactions(1).catch(() => ({ results: [] })), // Global sales for the line chart
       horizonApi.getCampaignTransactions(1).catch(() => ({ results: [], count: 0 }))
     ]).then(([campData, leadData, txData, ctData]) => {
-      setCampaigns(campData);
-      setLeads(leadData);
+      setCampaigns(Array.isArray(campData) ? campData : (campData?.results || []));
+      setLeads(Array.isArray(leadData) ? leadData : (leadData?.results || []));
       setTransactions(txData.results || []);
       
       setLedgerData(ctData.results || []);

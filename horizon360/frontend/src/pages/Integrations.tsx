@@ -90,7 +90,7 @@ export const Integrations = () => {
             {/* Horizon Ecosystem */}
             <div className="flex-1 text-center">
               <div className="text-indigo-200 text-sm font-bold mb-2 uppercase tracking-wide">Horizon 360</div>
-              <div className="bg-indigo-800 border border-indigo-700 p-4 rounded-lg">RawEvent Mesh & Workflow</div>
+              <div className="bg-indigo-800 border border-indigo-700 p-4 rounded-lg">Horizon API & Workflow</div>
             </div>
           </div>
         </div>

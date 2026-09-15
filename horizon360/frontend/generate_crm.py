@@ -1,4 +1,6 @@
+import os
 
+CONTENT = """
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { horizonApi } from '../api';
@@ -264,8 +266,8 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
             <span className="capitalize">{String(val || '').replace('_', ' ')}</span>
           </span>
         ) },
-        { key: 'phone', label: 'Phone', render: (val, row) => row.phone || '-' },
-        { key: 'joining_date', label: 'Joining Date', render: (val, row) => row.joining_date || '-' },
+        { key: 'phone', label: 'Phone', render: (_val, row) => row.phone || '-' },
+        { key: 'joining_date', label: 'Joining Date', render: (_val, row) => row.joining_date || '-' },
         { key: 'created_at', label: 'Created At', render: (val) => val ? new Date(val).toLocaleDateString() : '-' }
       ],
       fields: [
@@ -308,7 +310,7 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
             {val ? 'Active' : 'Inactive'}
           </span>
         ) },
-        { key: 'category', label: 'Category', render: (val, row) => row.category || '-' },
+        { key: 'category', label: 'Category', render: (_val, row) => row.category || '-' },
         { key: 'description', label: 'Description', render: (val) => val || '-' },
         { key: 'created_at', label: 'Created At', render: (val) => val ? new Date(val).toLocaleDateString() : '-' },
         { key: 'updated_at', label: 'Updated At', render: (val) => val ? new Date(val).toLocaleDateString() : '-' }
@@ -452,7 +454,7 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
         return `"${String(val).replace(/"/g, '""')}"`;
       }).join(',')
     );
-    const csvContent = [header, ...rows].join('\n');
+    const csvContent = [header, ...rows].join('\\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -532,7 +534,7 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
   };
 
   const handleDelete = async (id: string | number) => {
-    if (window.confirm('Delete this record?\n\nThis action cannot be undone.')) {
+    if (window.confirm('Delete this record?\\n\\nThis action cannot be undone.')) {
       try {
         await config.deleteFn(id);
         setSuccessMsg('Record deleted successfully');
@@ -950,3 +952,7 @@ export const CRMCoreListView = ({ entity }: { entity: 'customers' | 'companies' 
     </div>
   );
 };
+"""
+
+with open("src/pages/CRMCoreListView.tsx", "w") as f:
+    f.write(CONTENT)

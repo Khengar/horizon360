@@ -24,9 +24,9 @@ export const HRMS = () => {
       horizonApi.getLeaveRequests().catch(() => []),
       horizonApi.getDepartments().catch(() => [])
     ]).then(([empData, leaveData, deptData]) => {
-      setEmployees(empData);
-      setLeaveRequests(leaveData);
-      setDepartments(deptData);
+      setEmployees(Array.isArray(empData) ? empData : (empData?.results || []));
+      setLeaveRequests(Array.isArray(leaveData) ? leaveData : (leaveData?.results || []));
+      setDepartments(Array.isArray(deptData) ? deptData : (deptData?.results || []));
       setLoading(false);
     });
   };

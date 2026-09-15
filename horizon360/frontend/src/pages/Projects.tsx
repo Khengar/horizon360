@@ -46,9 +46,10 @@ export const Projects = () => {
       setTotalPages(Math.ceil((updated.count || 0) / 10));
       setIsModalOpen(false);
       setNewTarget({ title: '', metric_type: 'revenue', target_amount: '', start_date: new Date().toISOString().split('T')[0], deadline: '' });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to save target. Check console.');
+      const errMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      alert(`Failed to save target: ${errMsg}`);
     } finally {
       setSubmitting(false);
     }

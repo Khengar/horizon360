@@ -72,9 +72,6 @@ function App() {
               <main className="flex-1 overflow-y-auto">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/data-hub" element={<Placeholder title="Data Hub" />} />
-                  <Route path="/sources" element={<Placeholder title="Connect Sources" />} />
-                  <Route path="/identity" element={<Placeholder title="Identity Resolution Engine" />} />
                   <Route path="/cdp-360" element={<CDP360Dashboard />} />
                   
                   {/* Universal CRM Core */}
