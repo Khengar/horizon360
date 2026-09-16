@@ -35,16 +35,13 @@ export const Sidebar = () => {
     { name: 'Projects', path: '/projects', icon: LayoutDashboard, comingSoon: false },
     { name: 'HRMS', path: '/hrms', icon: Users, comingSoon: false },
     { name: 'Service', path: '/service', icon: UserCheck, comingSoon: false },
+    { name: 'Marketing', path: '/marketing', icon: Users, comingSoon: false },
   ];
 
   const bottomNav = [
-    { name: 'Intelligence', path: '/intelligence', icon: Database },
     { name: 'Workflows', path: '/workflows', icon: Share2 },
     { name: 'Orchestration', path: '/orchestration', icon: Network },
     { name: 'Integrations', path: '/integrations', icon: Network },
-    { name: 'Data Hub', path: '/data-hub', icon: Database },
-    { name: 'Sources', path: '/sources', icon: Link },
-    { name: 'Identity Resolution', path: '/identity', icon: UserCheck },
   ];
 
   return (

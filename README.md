@@ -11,7 +11,7 @@ flowchart TB
     subgraph Data_Layer["1. Universal Data Model (UDM)"]
         RawEvents["RawEvent Stream (Web/Mobile SDK)"]
         Customers["Unified Customer Profiles & Timeline"]
-        Deals["CRM Deals & Sales Pipeline"]
+       Deals["CRM Deals & Sales Pipeline"]
         Workflows["Event-Driven Workflows"]
     end
 

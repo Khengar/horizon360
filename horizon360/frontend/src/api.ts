@@ -48,6 +48,18 @@ export const horizonApi = {
     const res = await api.get('/customers/', { params });
     return res.data;
   },
+  createCustomer: async (data: any) => {
+    const res = await api.post('/customers/', data);
+    return res.data;
+  },
+  updateCustomer: async (id: string, data: any) => {
+    const res = await api.patch(`/customers/${id}/`, data);
+    return res.data;
+  },
+  deleteCustomer: async (id: string) => {
+    const res = await api.delete(`/customers/${id}/`);
+    return res.data;
+  },
   
   getCustomerDetail: async (id: string) => {
     const res = await api.get(`/customers/${id}/`);
@@ -86,6 +98,11 @@ export const horizonApi = {
     return res.data;
   },
 
+  deleteDeal: async (id: number | string) => {
+    const res = await api.delete(`/crm/deals/${id}/`);
+    return res.data;
+  },
+
   getDealDetail: async (id: number | string) => {
     const res = await api.get(`/crm/deals/${id}/`);
     return res.data;
@@ -108,28 +125,7 @@ export const horizonApi = {
     const res = await api.get('/workflow-executions/');
     return res.data;
   },
-  getInsights: async (filters?: { agent_type?: string; severity?: string }) => {
-    const res = await api.get('/intelligence/insights/', { params: filters });
-    return res.data;
-  },
-  runIntelligenceMesh: async () => {
-    const res = await api.post('/intelligence/run/', {});
-    return res.data;
-  },
-  executeAction: async (actionData: {
-    action_type: string;
-    entity_type?: string;
-    entity_id?: string;
-    insight_id?: number | string;
-    payload?: Record<string, any>;
-  }) => {
-    const res = await api.post('/intelligence/action/', actionData);
-    return res.data;
-  },
-  askCopilot: async (query: string) => {
-    const res = await api.post('/copilot/chat/', { query });
-    return res.data;
-  },
+
   getInvoices: async () => {
     const res = await api.get('/finance/invoices/');
     return res.data;
@@ -191,6 +187,14 @@ export const horizonApi = {
     const res = await api.get('/hrms/employees/');
     return res.data;
   },
+  updateEmployee: async (id: number | string, data: any) => {
+    const res = await api.patch(`/hrms/employees/${id}/`, data);
+    return res.data;
+  },
+  deleteEmployee: async (id: number | string) => {
+    const res = await api.delete(`/hrms/employees/${id}/`);
+    return res.data;
+  },
   createLeaveRequest: async (data: any) => { const res = await api.post('/hrms/leave-requests/', data); return res.data; },
   getLeaveRequests: async () => {
     const res = await api.get('/hrms/leave-requests/');
@@ -203,6 +207,18 @@ export const horizonApi = {
   },
   getProducts: async () => {
     const res = await api.get('/finance/products/');
+    return res.data;
+  },
+  createProduct: async (data: any) => {
+    const res = await api.post('/finance/products/', data);
+    return res.data;
+  },
+  updateProduct: async (id: number | string, data: any) => {
+    const res = await api.patch(`/finance/products/${id}/`, data);
+    return res.data;
+  },
+  deleteProduct: async (id: number | string) => {
+    const res = await api.delete(`/finance/products/${id}/`);
     return res.data;
   },
   createPartner: async (data: any) => { const res = await api.post('/partner/partners/', data); return res.data; },
@@ -258,6 +274,18 @@ export const horizonApi = {
   },
   getCompanies: async () => {
     const res = await api.get('/accounts/');
+    return res.data;
+  },
+  createCompany: async (data: any) => {
+    const res = await api.post('/accounts/', data);
+    return res.data;
+  },
+  updateCompany: async (id: string, data: any) => {
+    const res = await api.patch(`/accounts/${id}/`, data);
+    return res.data;
+  },
+  deleteCompany: async (id: string) => {
+    const res = await api.delete(`/accounts/${id}/`);
     return res.data;
   },
 
