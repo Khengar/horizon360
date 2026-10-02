@@ -20,3 +20,5 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+chimera_proxy.log
+telemetry.db
