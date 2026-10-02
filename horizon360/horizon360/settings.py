@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # manually added
+    'channels',
     'rest_framework',
     'cdp_core',
     'crm',
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
     'partner',
     'vendor',
     'integrations',
+    'flow_engine',
     'corsheaders',
 ]
 
@@ -84,6 +87,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'horizon360.wsgi.application'
+ASGI_APPLICATION = 'horizon360.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 
 # Database
@@ -162,8 +175,8 @@ CELERY_TIMEZONE = 'UTC'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'cdp_core.authentication.APITokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'cdp_core.authentication.APITokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -190,5 +203,13 @@ CELERY_BEAT_SCHEDULE = {
     'profile-enrichment-sweep': {
         'task': 'cdp_core.enrichment_tasks.enrich_all_company_profiles',
         'schedule': crontab(minute=30, hour='*/2'),
+    },
+    'flow-engine-sla-check': {
+        'task': 'flow_engine.check_sla_timers',
+        'schedule': crontab(minute='*'),  # Run every minute
+    },
+    'flow-engine-cron-scheduler': {
+        'task': 'flow_engine.check_scheduled_flows',
+        'schedule': crontab(minute='*'),  # Run every minute
     },
 }

@@ -28,7 +28,7 @@ def load_local_env():
                             k, v = line.split('=', 1)
                             k = k.strip()
                             v = v.strip().strip('"').strip("'")
-                            if k:
+                            if k and k not in os.environ:
                                 os.environ[k] = v
             except Exception as e:
                 logger.warning(f"Failed to parse .env at {p}: {e}")

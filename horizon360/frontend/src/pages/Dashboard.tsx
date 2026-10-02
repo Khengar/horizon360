@@ -12,25 +12,34 @@ export const Dashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
   
   const loadDashboardData = () => {
-    horizonApi.getCustomers().then(data => setCustomers(data)).catch(console.error);
-    horizonApi.getDeals().then(data => setDeals(data)).catch(console.error);
-    horizonApi.getEvents().then(data => setEvents(data.slice(0, 10))).catch(console.error);
-    horizonApi.getServiceTickets().then(data => setTickets(data)).catch(console.error);
-    horizonApi.getCampaigns().then(data => setCampaigns(data)).catch(console.error);
-    horizonApi.getProjects().then(data => setProjects(data)).catch(console.error);
+    horizonApi.getCustomers().then(data => setCustomers(Array.isArray(data) ? data : (data?.results || []))).catch(console.error);
+    horizonApi.getDeals().then(data => setDeals(Array.isArray(data) ? data : (data?.results || []))).catch(console.error);
+    horizonApi.getEvents().then(data => {
+      const list = Array.isArray(data) ? data : (data?.results || []);
+      setEvents(list.slice(0, 10));
+    }).catch(console.error);
+    horizonApi.getServiceTickets().then(data => setTickets(Array.isArray(data) ? data : (data?.results || []))).catch(console.error);
+    horizonApi.getCampaigns().then(data => setCampaigns(Array.isArray(data) ? data : (data?.results || []))).catch(console.error);
+    horizonApi.getProjects().then(data => setProjects(Array.isArray(data) ? data : (data?.results || []))).catch(console.error);
   };
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  const totalCustomers = customers.length;
-  const activeOpportunities = deals.filter(d => d.stage !== 'won' && d.stage !== 'lost').length;
-  const pipelineValue = deals.filter(d => d.stage !== 'won' && d.stage !== 'lost').reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
-  const wonRevenue = deals.filter(d => d.stage === 'won').reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
-  const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
-  const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
-  const activeProjects = projects.filter(p => p.status === 'active').length;
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+  const safeDeals = Array.isArray(deals) ? deals : [];
+  const safeTickets = Array.isArray(tickets) ? tickets : [];
+  const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
+  const safeProjects = Array.isArray(projects) ? projects : [];
+
+  const totalCustomers = safeCustomers.length;
+  const activeOpportunities = safeDeals.filter(d => d.stage !== 'won' && d.stage !== 'lost').length;
+  const pipelineValue = safeDeals.filter(d => d.stage !== 'won' && d.stage !== 'lost').reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
+  const wonRevenue = safeDeals.filter(d => d.stage === 'won').reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
+  const openTickets = safeTickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
+  const activeCampaigns = safeCampaigns.filter(c => c.status === 'active').length;
+  const activeProjects = safeProjects.filter(p => p.status === 'active').length;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white overflow-y-auto">

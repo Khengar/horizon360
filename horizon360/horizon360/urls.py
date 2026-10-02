@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/vendor/', include('vendor.urls')),
     path('api/integrations/', include('integrations.urls')),
     path('api/nexus/', include('integrations.urls')),
+    
+    # Version 2 (Horizon Flow Engine)
+    path('api/v2/flow-engine/', include('flow_engine.urls')),
 ]
-
-

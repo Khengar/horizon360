@@ -24,8 +24,8 @@ export const Pipeline = () => {
     setLoading(true);
     Promise.all([horizonApi.getDeals(), horizonApi.getCustomers()])
       .then(([dealsData, custData]) => {
-        setDeals(dealsData);
-        setCustomers(custData);
+        setDeals(Array.isArray(dealsData) ? dealsData : (dealsData?.results || []));
+        setCustomers(Array.isArray(custData) ? custData : (custData?.results || []));
         setLoading(false);
       })
       .catch(err => {
@@ -94,7 +94,7 @@ export const Pipeline = () => {
       <div className="flex-1 p-8 overflow-x-auto overflow-y-hidden">
         <div className="flex h-full gap-4 items-start pb-4" style={{ minWidth: 'min-content' }}>
           {STAGES.map(stage => {
-            const stageDeals = deals.filter(d => d.stage === stage.id);
+            const stageDeals = (Array.isArray(deals) ? deals : []).filter(d => d.stage === stage.id);
             const totalValue = stageDeals.reduce((sum, d) => sum + parseFloat(d.value), 0);
 
             return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network, Radar, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Database, Link, UserCheck, Users, LogOut, HelpCircle, Settings, Share2, Map, Network, Radar, TrendingUp, CheckCircle, BarChart2, Shield } from 'lucide-react';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -40,6 +40,9 @@ export const Sidebar = () => {
 
   const bottomNav = [
     { name: 'Workflows', path: '/workflows', icon: Share2 },
+    { name: 'Analytics', path: '/analytics', icon: BarChart2 },
+    { name: 'Approvals', path: '/approvals', icon: CheckCircle },
+    { name: 'Audit Trail', path: '/audit', icon: Shield },
     { name: 'Orchestration', path: '/orchestration', icon: Network },
     { name: 'Integrations', path: '/integrations', icon: Network },
   ];

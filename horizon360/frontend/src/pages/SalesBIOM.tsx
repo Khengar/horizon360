@@ -28,7 +28,7 @@ const PipelineStage = ({ label, count, color, text, isLast }: { label: string, c
 );
 
 const ActivityList = ({ title, deals, customers, stageIds }: { title: string, deals: any[], customers: any[], stageIds: string[] }) => {
-  const filteredDeals = deals.filter(d => stageIds.includes(d.stage));
+  const filteredDeals = (Array.isArray(deals) ? deals : []).filter(d => stageIds.includes(d.stage));
   
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[350px]">
@@ -128,10 +128,11 @@ export const SalesBIOM = () => {
 
   const getStageCount = (stageId: string) => {
     if (loading) return '-';
+    const safeDeals = Array.isArray(deals) ? deals : [];
     if (stageId === 'won_loss') {
-      return deals.filter(d => d.stage === 'won' || d.stage === 'lost').length;
+      return safeDeals.filter(d => d.stage === 'won' || d.stage === 'lost').length;
     }
-    return deals.filter(d => d.stage === stageId).length;
+    return safeDeals.filter(d => d.stage === stageId).length;
   };
 
   return (

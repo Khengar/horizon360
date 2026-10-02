@@ -12,15 +12,18 @@ export const Integrations = () => {
       horizonApi.getIntegrations(),
       horizonApi.getIntegrationLogs()
     ]).then(([integData, logsData]) => {
-      setIntegrations(integData);
-      setLogs(logsData);
+      setIntegrations(Array.isArray(integData) ? integData : (integData?.results || []));
+      setLogs(Array.isArray(logsData) ? logsData : (logsData?.results || []));
       setLoading(false);
     }).catch(console.error);
   }, []);
 
-  const inboundCount = logs.filter(l => l.direction === 'inbound').length;
-  const outboundCount = logs.filter(l => l.direction === 'outbound').length;
-  const failedCount = logs.filter(l => l.status === 'failed').length;
+  const safeLogs = Array.isArray(logs) ? logs : [];
+  const safeIntegrations = Array.isArray(integrations) ? integrations : [];
+
+  const inboundCount = safeLogs.filter(l => l.direction === 'inbound').length;
+  const outboundCount = safeLogs.filter(l => l.direction === 'outbound').length;
+  const failedCount = safeLogs.filter(l => l.status === 'failed').length;
 
   return (
     <div className="flex-1 p-8 bg-slate-50 h-full overflow-y-auto">
@@ -37,7 +40,7 @@ export const Integrations = () => {
         <div className="grid grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Active Connections</h3>
-            <p className="text-3xl font-black mt-2 text-slate-800">{integrations.filter(i => i.status === 'active').length}</p>
+            <p className="text-3xl font-black mt-2 text-slate-800">{safeIntegrations.filter(i => i.status === 'active').length}</p>
           </div>
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Inbound Events</h3>

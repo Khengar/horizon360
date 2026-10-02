@@ -9,23 +9,48 @@ const api = axios.create({
   },
 });
 
-// Interceptor to inject JWT token if it exists
+// Interceptor to inject JWT token and company API key
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('jwt_token');
-  if (token && config.headers) {
-    config.headers.set('Authorization', `Bearer ${token}`);
+  const apiToken = localStorage.getItem('company_api_token');
+  if (config.headers) {
+    if (token) {
+      if (typeof (config.headers as any).set === 'function') {
+        (config.headers as any).set('Authorization', `Bearer ${token}`);
+      } else {
+        (config.headers as any)['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    if (apiToken) {
+      if (typeof (config.headers as any).set === 'function') {
+        (config.headers as any).set('X-API-Key', apiToken);
+      } else {
+        (config.headers as any)['X-API-Key'] = apiToken;
+      }
+    }
   }
   return config;
 });
 
-// Interceptor to automatically logout on 401 expiration
+// Interceptor to automatically logout on 401 or 403 authentication expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('company_api_token');
-      window.location.href = '/login';
+    if (error.response) {
+      const isAuthError =
+        error.response.status === 401 ||
+        (error.response.status === 403 &&
+          (error.response.data?.code === 'not_authenticated' ||
+           error.response.data?.code === 'token_not_valid' ||
+           (typeof error.response.data?.detail === 'string' &&
+             (error.response.data.detail.toLowerCase().includes('credential') ||
+              error.response.data.detail.toLowerCase().includes('token')))));
+
+      if (isAuthError && !window.location.pathname.startsWith('/login')) {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('company_api_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -162,8 +187,105 @@ export const horizonApi = {
     const res = await api.post('/marketing/campaigns/', data);
     return res.data;
   },
-  getCampaigns: async () => {
-    const res = await api.get('/marketing/campaigns/');
+  getCampaigns: async (page?: number) => {
+    const url = page !== undefined ? `/marketing/campaigns/?page=${page}` : '/marketing/campaigns/';
+    const res = await api.get(url);
+    return res.data;
+  },
+  getCampaign: async (id: number | string) => {
+    const res = await api.get(`/marketing/campaigns/${id}/`);
+    return res.data;
+  },
+  updateCampaign: async (id: number | string, data: any) => {
+    const res = await api.patch(`/marketing/campaigns/${id}/`, data);
+    return res.data;
+  },
+  deleteCampaign: async (id: number | string) => {
+    const res = await api.delete(`/marketing/campaigns/${id}/`);
+    return res.data;
+  },
+  previewCampaignAudience: async (id: number | string) => {
+    const res = await api.post(`/marketing/campaigns/${id}/preview-audience/`);
+    return res.data;
+  },
+  sendCampaignNow: async (id: number | string) => {
+    const res = await api.post(`/marketing/campaigns/${id}/send-now/`);
+    return res.data;
+  },
+  scheduleCampaign: async (id: number | string, data: any) => {
+    const res = await api.post(`/marketing/campaigns/${id}/schedule/`, data);
+    return res.data;
+  },
+  pauseCampaign: async (id: number | string) => {
+    const res = await api.post(`/marketing/campaigns/${id}/pause/`);
+    return res.data;
+  },
+  resumeCampaign: async (id: number | string) => {
+    const res = await api.post(`/marketing/campaigns/${id}/resume/`);
+    return res.data;
+  },
+  duplicateCampaign: async (id: number | string) => {
+    const res = await api.post(`/marketing/campaigns/${id}/duplicate/`);
+    return res.data;
+  },
+  getCampaignAnalytics: async (id: number | string) => {
+    const res = await api.get(`/marketing/campaigns/${id}/analytics/`);
+    return res.data;
+  },
+  generateCampaignAudience: async (id: number | string, data: any = {}) => {
+    const res = await api.post(`/marketing/campaigns/${id}/generate-audience/`, data);
+    return res.data;
+  },
+  generateCampaignCopy: async (id: number | string, data: any) => {
+    const res = await api.post(`/marketing/campaigns/${id}/generate-copy/`, data);
+    return res.data;
+  },
+  getCampaignAttributionBriefing: async (id: number | string) => {
+    const res = await api.get(`/marketing/campaigns/${id}/attribution-briefing/`);
+    return res.data;
+  },
+  getCampaignContents: async (campaignId: number | string) => {
+    const res = await api.get(`/marketing/contents/?campaign=${campaignId}`);
+    return res.data;
+  },
+  createCampaignContent: async (data: any) => {
+    const res = await api.post('/marketing/contents/', data);
+    return res.data;
+  },
+  updateCampaignContent: async (id: number | string, data: any) => {
+    const res = await api.patch(`/marketing/contents/${id}/`, data);
+    return res.data;
+  },
+  deleteCampaignContent: async (id: number | string) => {
+    const res = await api.delete(`/marketing/contents/${id}/`);
+    return res.data;
+  },
+  previewCampaignContent: async (contentId: number | string, customerId?: string) => {
+    const res = await api.post(`/marketing/contents/${contentId}/preview/`, { customer_id: customerId });
+    return res.data;
+  },
+  getCampaignRecipients: async (campaignId: number | string, page = 1) => {
+    const res = await api.get(`/marketing/recipients/?campaign=${campaignId}&page=${page}`);
+    return res.data;
+  },
+  getCampaignEvents: async (campaignId: number | string, page = 1) => {
+    const res = await api.get(`/marketing/events/?campaign=${campaignId}&page=${page}`);
+    return res.data;
+  },
+  getMarketingTemplates: async () => {
+    const res = await api.get('/marketing/templates/');
+    return res.data;
+  },
+  createMarketingTemplate: async (data: any) => {
+    const res = await api.post('/marketing/templates/', data);
+    return res.data;
+  },
+  getMarketingDashboard: async () => {
+    const res = await api.get('/marketing/dashboard/');
+    return res.data;
+  },
+  getAllSegments: async () => {
+    const res = await api.get('/segments/');
     return res.data;
   },
   getLeads: async () => {
@@ -250,12 +372,72 @@ export const horizonApi = {
     const res = await api.get('/nexus/integration-logs/');
     return res.data;
   },
-  updateWorkflow: async (id: number, data: any) => {
+  updateWorkflow: async (id: number | string, data: any) => {
     const res = await api.patch(`/workflows/${id}/`, data);
     return res.data;
   },
   createWorkflow: async (data: any) => {
     const res = await api.post('/workflows/', data);
+    return res.data;
+  },
+
+  // Flow Engine V2
+  getV2Flows: async () => {
+    const res = await api.get('/v2/flow-engine/flows/');
+    return res.data;
+  },
+  getV2FlowDetail: async (id: string) => {
+    const res = await api.get(`/v2/flow-engine/flows/${id}/`);
+    return res.data;
+  },
+  createV2Flow: async (data: any) => {
+    const res = await api.post('/v2/flow-engine/flows/', data);
+    return res.data;
+  },
+  getV2FlowVersion: async (versionId: string) => {
+    const res = await api.get(`/v2/flow-engine/flow-versions/${versionId}/`);
+    return res.data;
+  },
+  saveV2FlowCanvas: async (versionId: string, nodes: any[], edges: any[]) => {
+    const res = await api.put(`/v2/flow-engine/flow-versions/${versionId}/canvas/`, { nodes, edges });
+    return res.data;
+  },
+  updateV2FlowTrigger: async (flowId: string, data: any) => {
+    const res = await api.put(`/v2/flow-engine/flows/${flowId}/update_trigger/`, data);
+    return res.data;
+  },
+  getV2FlowAnalytics: async () => {
+    const res = await api.get('/v2/flow-engine/flow-analytics/dashboard/');
+    return res.data;
+  },
+  getFlowAuditLogs: async () => {
+    const res = await api.get('/v2/flow-engine/flow-audit/');
+    return res.data;
+  },
+  getV2Executions: async () => {
+    const res = await api.get('/v2/flow-engine/executions/');
+    return res.data;
+  },
+  getV2Execution: async (id: string) => {
+    const res = await api.get(`/v2/flow-engine/executions/${id}/`);
+    return res.data;
+  },
+  getV2Templates: async () => {
+    const res = await api.get('/v2/flow-engine/flow-templates/');
+    return res.data;
+  },
+  
+  // Flow Engine Approvals
+  getV2Approvals: async () => {
+    const res = await api.get('/v2/flow-engine/approvals/');
+    return res.data;
+  },
+  approveV2Approval: async (id: string, comment: string = '') => {
+    const res = await api.post(`/v2/flow-engine/approvals/${id}/approve/`, { comment });
+    return res.data;
+  },
+  rejectV2Approval: async (id: string, comment: string = '') => {
+    const res = await api.post(`/v2/flow-engine/approvals/${id}/reject/`, { comment });
     return res.data;
   },
 
@@ -286,6 +468,20 @@ export const horizonApi = {
   },
   deleteCompany: async (id: string) => {
     const res = await api.delete(`/accounts/${id}/`);
+    return res.data;
+  },
+
+  // SLA Policies
+  getSLAPolicies: async (flowId: string) => {
+    const res = await api.get(`/v2/flow-engine/sla-policies/?flow=${flowId}`);
+    return res.data;
+  },
+  createSLAPolicy: async (data: any) => {
+    const res = await api.post('/v2/flow-engine/sla-policies/', data);
+    return res.data;
+  },
+  deleteSLAPolicy: async (id: string) => {
+    const res = await api.delete(`/v2/flow-engine/sla-policies/${id}/`);
     return res.data;
   },
 

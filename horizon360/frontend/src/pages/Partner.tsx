@@ -22,8 +22,8 @@ export const Partner = () => {
       horizonApi.getPartners().catch(() => []),
       horizonApi.getPartnerOpportunities().catch(() => [])
     ]).then(([partData, oppData]) => {
-      setPartners(partData);
-      setOpportunities(oppData);
+      setPartners(Array.isArray(partData) ? partData : (partData?.results || []));
+      setOpportunities(Array.isArray(oppData) ? oppData : (oppData?.results || []));
       setLoading(false);
     });
   };
@@ -44,10 +44,13 @@ export const Partner = () => {
     }
   };
 
-  const totalPartners = partners.length;
-  const activePartners = partners.filter(p => p.status === 'active').length;
-  const totalOppValue = opportunities.reduce((sum, opp) => sum + parseFloat(opp.value || 0), 0);
-  const wonOpps = opportunities.filter(o => o.stage === 'won').length;
+  const safePartners = Array.isArray(partners) ? partners : [];
+  const safeOpportunities = Array.isArray(opportunities) ? opportunities : [];
+
+  const totalPartners = safePartners.length;
+  const activePartners = safePartners.filter(p => p.status === 'active').length;
+  const totalOppValue = safeOpportunities.reduce((sum, opp) => sum + parseFloat(opp.value || 0), 0);
+  const wonOpps = safeOpportunities.filter(o => o.stage === 'won').length;
 
   return (
     <div className="flex-1 p-8 bg-gray-50 h-full overflow-y-auto">

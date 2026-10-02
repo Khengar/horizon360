@@ -10,6 +10,10 @@ import { HRMS } from './pages/HRMS';
 import { Partner } from './pages/Partner';
 import { Vendor } from './pages/Vendor';
 import { Workflows } from './pages/Workflows';
+import { ExecutionTrace } from './pages/ExecutionTrace';
+import { Approvals } from './pages/Approvals';
+import { FlowAnalytics } from './pages/FlowAnalytics';
+import AuditLogs from './pages/AuditLogs';
 import { OperationsMap } from './pages/OperationsMap';
 import { Integrations } from './pages/Integrations';
 import { Login } from './pages/Login';
@@ -21,6 +25,8 @@ import { CRMContactProfile } from './pages/CRMContactProfile';
 import { CRMCoreListView } from './pages/CRMCoreListView';
 import { OrchestrationHub } from './pages/OrchestrationHub';
 import { SalesBIOM } from './pages/SalesBIOM';
+import { CampaignBuilder } from './pages/CampaignBuilder';
+import { CampaignAnalytics } from './pages/CampaignAnalytics';
 import "./App.css";
 
 // Protected Route Wrapper
@@ -88,11 +94,18 @@ function App() {
                   <Route path="/finance" element={<Finance />} />
                   <Route path="/service" element={<Service />} />
                   <Route path="/marketing" element={<Marketing />} />
+                  <Route path="/marketing/campaigns/new" element={<CampaignBuilder />} />
+                  <Route path="/marketing/campaigns/:id" element={<CampaignBuilder />} />
+                  <Route path="/marketing/campaigns/:id/analytics" element={<CampaignAnalytics />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/hrms" element={<HRMS />} />
                   <Route path="/partner" element={<Partner />} />
                   <Route path="/vendor" element={<Vendor />} />
                   <Route path="/workflows" element={<Workflows />} />
+                  <Route path="/analytics" element={<FlowAnalytics />} />
+                  <Route path="/executions/:id" element={<ExecutionTrace />} />
+                  <Route path="/approvals" element={<Approvals />} />
+                  <Route path="/audit" element={<AuditLogs />} />
                   <Route path="/orchestration" element={<OrchestrationHub />} />
                   <Route path="/map" element={<OperationsMap />} />
                   <Route path="/integrations" element={<Integrations />} />

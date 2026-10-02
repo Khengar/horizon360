@@ -17,19 +17,22 @@ export const Service = () => {
       horizonApi.getServiceTickets().catch(() => []),
       horizonApi.getServiceEntitlements().catch(() => [])
     ]).then(([ticketsData, entitlementsData]) => {
-      setTickets(ticketsData);
-      setEntitlements(entitlementsData);
+      setTickets(Array.isArray(ticketsData) ? ticketsData : (ticketsData?.results || []));
+      setEntitlements(Array.isArray(entitlementsData) ? entitlementsData : (entitlementsData?.results || []));
       setLoading(false);
     });
   }, []);
 
-  const openCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
-  const criticalCount = tickets.filter(t => t.priority === 'critical' && t.status !== 'resolved' && t.status !== 'closed').length;
-  const resolvedCount = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
+  const safeTickets = Array.isArray(tickets) ? tickets : [];
+  const safeEntitlements = Array.isArray(entitlements) ? entitlements : [];
+
+  const openCount = safeTickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
+  const criticalCount = safeTickets.filter(t => t.priority === 'critical' && t.status !== 'resolved' && t.status !== 'closed').length;
+  const resolvedCount = safeTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
   const slaRisk = criticalCount; // Approximation for demo
 
   // Dynamic filtering based on star analyzer
-  const filteredEntitlements = entitlements.filter(e => {
+  const filteredEntitlements = safeEntitlements.filter(e => {
     if (ratingFilter === 'all') return true;
     if (ratingFilter === 'unrated') return e.feedback_rating == null;
     

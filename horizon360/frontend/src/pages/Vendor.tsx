@@ -22,8 +22,8 @@ export const Vendor = () => {
       horizonApi.getVendors().catch(() => []),
       horizonApi.getPurchaseOrders().catch(() => [])
     ]).then(([venData, poData]) => {
-      setVendors(venData);
-      setPurchaseOrders(poData);
+      setVendors(Array.isArray(venData) ? venData : (venData?.results || []));
+      setPurchaseOrders(Array.isArray(poData) ? poData : (poData?.results || []));
       setLoading(false);
     });
   };
@@ -44,10 +44,13 @@ export const Vendor = () => {
     }
   };
 
-  const totalVendors = vendors.length;
-  const activeVendors = vendors.filter(v => v.status === 'active').length;
-  const totalPOSpend = purchaseOrders.reduce((sum, po) => sum + parseFloat(po.amount || 0), 0);
-  const pendingPOs = purchaseOrders.filter(po => ['draft', 'submitted', 'approved'].includes(po.status)).length;
+  const safeVendors = Array.isArray(vendors) ? vendors : [];
+  const safePOs = Array.isArray(purchaseOrders) ? purchaseOrders : [];
+
+  const totalVendors = safeVendors.length;
+  const activeVendors = safeVendors.filter(v => v.status === 'active').length;
+  const totalPOSpend = safePOs.reduce((sum, po) => sum + parseFloat(po.amount || 0), 0);
+  const pendingPOs = safePOs.filter(po => ['draft', 'submitted', 'approved'].includes(po.status)).length;
 
   return (
     <div className="flex-1 p-8 bg-gray-50 h-full overflow-y-auto">

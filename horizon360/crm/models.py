@@ -177,10 +177,10 @@ class Deal(models.Model):
             )
             process_event_task.delay(raw_event.id)
 
-        # Trigger cross-BIOM orchestration when deal is won
-        if self.stage == 'won' and old_stage != 'won':
-            from crm.tasks import run_deal_won_orchestration
-            run_deal_won_orchestration.delay(self.id)
+        # Old hardcoded orchestration - Disabled in favor of Horizon Flow Engine (Level 6)
+        # if self.stage == 'won' and old_stage != 'won':
+        #     from crm.tasks import run_deal_won_orchestration
+        #     run_deal_won_orchestration.delay(self.id)
 
     def __str__(self):
         return f"Deal: {self.title} - {self.get_stage_display()} - ${self.value}"

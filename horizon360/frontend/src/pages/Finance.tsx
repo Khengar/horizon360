@@ -46,12 +46,15 @@ export const Finance = () => {
         horizonApi.getExpenses(),
         horizonApi.getTransactions(currentPage).catch(() => ({ results: [], count: 0 }))
       ]);
-      setInvoices(invData);
-      setExpenses(expData);
+      setInvoices(Array.isArray(invData) ? invData : (invData?.results || []));
+      setExpenses(Array.isArray(expData) ? expData : (expData?.results || []));
       
-      if (txData && txData.results) {
+      if (txData && Array.isArray(txData.results)) {
         setTransactions(txData.results);
-        setTotalPages(Math.ceil(txData.count / 10) || 1);
+        setTotalPages(Math.ceil((txData.count || 0) / 10) || 1);
+      } else if (Array.isArray(txData)) {
+        setTransactions(txData);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error(error);
@@ -114,26 +117,30 @@ export const Finance = () => {
   };
 
   // Filtered Data
+  const safeInvoices = Array.isArray(invoices) ? invoices : [];
+  const safeExpenses = Array.isArray(expenses) ? expenses : [];
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
   const term = searchTerm.toLowerCase();
-  const filteredInvoices = invoices.filter(inv => 
+  const filteredInvoices = safeInvoices.filter(inv => 
     inv.invoice_number?.toLowerCase().includes(term) ||
     inv.status?.toLowerCase().includes(term) ||
     String(inv.customer).includes(term)
   );
   
-  const filteredExpenses = expenses.filter(exp =>
+  const filteredExpenses = safeExpenses.filter(exp =>
     exp.description?.toLowerCase().includes(term) ||
     exp.status?.toLowerCase().includes(term)
   );
 
-  const filteredTransactions = transactions.filter(tx =>
+  const filteredTransactions = safeTransactions.filter(tx =>
     tx.description?.toLowerCase().includes(term) ||
     tx.transaction_type?.toLowerCase().includes(term)
   );
 
   // Global Metrics (based on ALL data, not just filtered)
-  const totalEarned = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-  const totalSpent = expenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+  const totalEarned = safeInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+  const totalSpent = safeExpenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
   const netIncome = totalEarned - totalSpent;
 
   // View Specific Metrics (based on FILTERED data)
@@ -150,11 +157,11 @@ export const Finance = () => {
     .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
 
   // Pipeline counts from real data
-  const procurementCount = expenses.length;
-  const approvalCount = expenses.filter(e => e.status === 'pending').length; 
-  const invoicingCount = invoices.length;
-  const accountingCount = transactions.length;
-  const reportingCount = invoices.filter(i => i.status === 'paid').length + expenses.filter(e => e.status === 'paid').length;
+  const procurementCount = safeExpenses.length;
+  const approvalCount = safeExpenses.filter(e => e.status === 'pending').length; 
+  const invoicingCount = safeInvoices.length;
+  const accountingCount = safeTransactions.length;
+  const reportingCount = safeInvoices.filter(i => i.status === 'paid').length + safeExpenses.filter(e => e.status === 'paid').length;
 
   const PIPELINE_STAGES = [
     { label: 'Procurement', count: procurementCount, color: 'bg-purple-50 border-purple-200', text: 'text-purple-800' },

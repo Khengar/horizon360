@@ -55,7 +55,9 @@ export const Projects = () => {
     }
   };
 
-  const filteredTargets = targets.filter(t => 
+  const safeTargets = Array.isArray(targets) ? targets : [];
+
+  const filteredTargets = safeTargets.filter(t => 
     t.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -67,11 +69,11 @@ export const Projects = () => {
     type: t.metric_type
   }));
 
-  const overallRevenueTarget = targets.filter(t => t.metric_type === 'revenue').reduce((s, t) => s + parseFloat(t.target_amount), 0);
-  const overallRevenueProgress = targets.filter(t => t.metric_type === 'revenue').reduce((s, t) => s + t.current_progress, 0);
+  const overallRevenueTarget = safeTargets.filter(t => t.metric_type === 'revenue').reduce((s, t) => s + parseFloat(t.target_amount), 0);
+  const overallRevenueProgress = safeTargets.filter(t => t.metric_type === 'revenue').reduce((s, t) => s + t.current_progress, 0);
   
-  const overallExpenseTarget = targets.filter(t => t.metric_type === 'expense').reduce((s, t) => s + parseFloat(t.target_amount), 0);
-  const overallExpenseProgress = targets.filter(t => t.metric_type === 'expense').reduce((s, t) => s + t.current_progress, 0);
+  const overallExpenseTarget = safeTargets.filter(t => t.metric_type === 'expense').reduce((s, t) => s + parseFloat(t.target_amount), 0);
+  const overallExpenseProgress = safeTargets.filter(t => t.metric_type === 'expense').reduce((s, t) => s + t.current_progress, 0);
 
   return (
     <div className="flex-1 p-8 bg-gray-50 h-full overflow-y-auto">

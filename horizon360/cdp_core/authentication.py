@@ -19,3 +19,6 @@ class APITokenAuthentication(authentication.BaseAuthentication):
              raise exceptions.AuthenticationFailed('No user associated with this company')
              
         return (user, None)
+
+    def authenticate_header(self, request):
+        return 'X-API-Key'

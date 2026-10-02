@@ -129,9 +129,37 @@ def process_event_task(raw_event_id):
     raw_event.processed = True
     raw_event.save()
     
-    # 5. Execute Workflows
-    from .workflow_service import execute_workflows
-    execute_workflows(raw_event)
+    # 5. Execute Workflows (Old system) - DEPRECATED in favor of Flow Engine (Level 6)
+    # from .workflow_service import execute_workflows
+    # execute_workflows(raw_event)
+    
+    # 5a. Execute Horizon Flow Engine (New Level 6 system)
+    try:
+        from flow_engine.runtime import FlowRuntime
+        from flow_engine.models import FlowDefinition
+        
+        active_flows = FlowDefinition.objects.filter(
+            company=raw_event.company,
+            is_active=True,
+            trigger_type='event',
+            trigger_event=normalized_name
+        )
+        
+        if active_flows.exists():
+            runtime = FlowRuntime()
+            trigger_payload = {
+                'event_id': str(raw_event.id),
+                'event_name': normalized_name,
+                'customer_id': str(customer.id) if customer else None,
+                **(payload or {})
+            }
+            for flow in active_flows:
+                try:
+                    runtime.start_execution(flow_id=flow.id, trigger_payload=trigger_payload)
+                except Exception as e:
+                    logger.error(f"Failed to start flow {flow.id} for event {raw_event.id}: {e}")
+    except ImportError:
+        pass  # flow_engine app might not be installed in some test environments
     
     # 5b. Real-time Profile Unification and Enrichment
     if customer:

@@ -23,15 +23,22 @@ export const OperationsMap = () => {
           horizonApi.getVendors(), horizonApi.getWorkflows(), horizonApi.getIntegrations()
         ]);
         
+        const getCount = (val: any) => {
+          if (Array.isArray(val)) return val.length;
+          if (val && typeof val.count === 'number') return val.count;
+          if (val && Array.isArray(val.results)) return val.results.length;
+          return 0;
+        };
+
         setData({
-          Sales: { records: deals.length, status: 'Operational', path: '/pipeline' },
-          Finance: { records: invoices.length, status: 'Operational', path: '/finance' },
-          Service: { records: tickets.length, status: 'Operational', path: '/service' },
-          Marketing: { records: campaigns.length, status: 'Operational', path: '/marketing' },
-          Projects: { records: projects.length, status: 'Operational', path: '/projects' },
-          HRMS: { records: employees.length, status: 'Operational', path: '/hrms' },
-          Partner: { records: partners.length, status: 'Operational', path: '/partner' },
-          Vendor: { records: vendors.length, status: 'Operational', path: '/vendor' }
+          Sales: { records: getCount(deals), status: 'Operational', path: '/pipeline' },
+          Finance: { records: getCount(invoices), status: 'Operational', path: '/finance' },
+          Service: { records: getCount(tickets), status: 'Operational', path: '/service' },
+          Marketing: { records: getCount(campaigns), status: 'Operational', path: '/marketing' },
+          Projects: { records: getCount(projects), status: 'Operational', path: '/projects' },
+          HRMS: { records: getCount(employees), status: 'Operational', path: '/hrms' },
+          Partner: { records: getCount(partners), status: 'Operational', path: '/partner' },
+          Vendor: { records: getCount(vendors), status: 'Operational', path: '/vendor' }
         });
         setWorkflows(wfs);
         setIntegrations(integs);
